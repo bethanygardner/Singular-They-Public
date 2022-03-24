@@ -1,0 +1,236 @@
+---
+title: "Improving memory for and production of singular <i>they</i> pronouns: Experiment 1B"
+author: "Bethany Gardner"
+date: "03/24/2022"
+output: 
+  github_document:
+    toc: true
+    toc_depth: 3
+  pdf_document:
+    toc: true
+    toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(magrittr)
+library(lmerTest)
+library(buildmer)
+library(sjmisc)
+```
+
+This is a replication of the first experiment. Everything is identical,
+except that the production task occurs before the memory task.
+
+# Load Data
+
+Read data, preprocessed from Qualtrics output. See
+data/exp1b_data_readme for more details.
+
+```{r}
+d <- read.csv("../data/exp1b_data.csv", stringsAsFactors=TRUE)
+str(d)
+```
+
+Set up contrast coding. The first contrast compares they to he+she. The
+second contrast compares he to she.
+
+```{r}
+contrasts(d$Pronoun) = cbind("they vs he+she"=c(.33,.33,-.66), 
+                             "he vs she"=c(-.5,.5, 0))
+contrasts(d$Pronoun)
+```
+
+Split data by task, and only keep pronoun questions (not the job or pet
+questions) in memory dataframe.
+
+```{r}
+m <- d %>% filter(M_Type=="pronoun")
+p <- d %>% filter(Task=="production")
+```
+
+Combine memory and production trials to make one row for each character.
+
+```{r}
+#Get pronoun memory and production observations. Filter out memory for job and pet questions, and introduction pilot task questions.
+mp <- d %>% filter(Task != "introduction" & 
+                   M_Type != "job" &
+                   M_Type != "pet") 
+
+#Just take columns used in model
+m_temp <- mp %>% select(M_Acc, Pronoun, Name, SubjID) %>%
+  filter(!is.na(M_Acc)) #Take out empty rows that were other question types
+
+#Get production accuracy column
+p_temp <- mp %>% select(P_Acc)  %>%
+    filter(!is.na(P_Acc)) #Take out empty rows that were other question types
+
+#Combine
+mp <- cbind(m_temp, p_temp) 
+str(mp)
+```
+
+# Memory
+
+### Descriptive Stats
+
+Mean accuracy for all three memory question types.
+
+```{r}
+prop.table(table(d$M_Type, d$M_Acc), margin=1)
+```
+
+Mean accuracy, split by pronoun type.
+
+```{r}
+prop.table(table(m$Pronoun, m$M_Acc), margin=1)
+```
+
+96% of participants selected they/them at least once.
+
+```{r}
+they_m <- d %>% filter(M_Response=="they/them") %>%
+  summarize(n=n_distinct(SubjID)) 
+
+they_m/(n_distinct(d$SubjID))
+
+```
+
+### Model
+
+Start with model that has random intercepts and slopes for participant
+and item. Maximal model has by-participant random intercepts only.
+
+```{r}
+model_m_full <- M_Acc ~ Pronoun + (1 + Pronoun|SubjID) + (1 + Pronoun|Name)
+
+model_m <- buildmer(model_m_full, data=m, 
+                    family='binomial', direction=c('order'))
+summary(model_m)
+```
+
+Convert to odds:
+
+```{r}
+exp(0.94930) #intercept (mean)
+exp(1.55205) #they/them vs. he/him + she/her
+```
+
+-   The intercept is significant (p\<.001), such that participants are
+    2.58 times more likely to answer correctly than incorrectly across
+    all pronoun types.
+
+-   The contrast between they/them and he/him + she/her is significant
+    (p\<.001), such that participants are 4.72 times more likely to get
+    he/him and she/her right than they/them.
+
+-   The contrast between he/him and she/her is not significant.
+
+# Production
+
+### Descriptive Stats
+
+Mean accuracy, split by pronoun type. Accuracy for producing they/them
+is lower than accuracy for remembering they/them.
+
+```{r}
+prop.table(table(p$Pronoun, p$P_Acc), margin=1)
+```
+
+71% of participants produced they/them at least once.
+
+```{r}
+they_p <- d %>% filter(P_Pronoun=="they/them") %>%
+  summarize(n=n_distinct(SubjID)) 
+
+they_p/(n_distinct(d$SubjID))
+
+```
+
+### Model
+
+Start with model that has random intercepts and slopes for participant
+and item, using same specifications as before. Maximal model has random
+intercepts by participant and item, and no random slopes.
+
+```{r}
+model_p_full <- P_Acc ~ Pronoun + 
+  (1 + Pronoun|SubjID) + (1 + Pronoun|Name)
+
+model_p <- buildmer(model_p_full, data=p, 
+          family='binomial', direction=c('order'))
+summary(model_p)
+```
+
+Convert to odds:
+
+```{r}
+exp(1.10833) #intercept (mean)
+exp(2.476427) #they/them vs. he/him + she/her
+```
+
+-   The intercept is significant (p\<.001), such that participants are
+    3.02 times more likely to answer correctly than incorrectly across
+    all pronoun types.
+
+-   The contrast between they/them and he/him + she/her is significant
+    (p\<.001), such that participants are 11.83 times more likely to get
+    he/him and she/her right than they/them.
+
+-   The contrast between he/him and she/her is not significant.
+
+# Memory Predicting Production
+
+### Descriptive Stats
+
+Combining the two measures, there are 4 possible patterns: getting both
+right, getting both wrong, getting just memory right, and getting just
+production right.
+
+```{r}
+mp_acc <- mp %>% 
+          mutate(BothRight=ifelse(M_Acc==1 & P_Acc==1, 1, 0)) %>%
+          mutate(BothWrong=ifelse(M_Acc==0 & P_Acc==0, 1, 0)) %>%
+          mutate(MemOnly=ifelse(M_Acc==1 & P_Acc==0, 1, 0)) %>%
+          mutate(ProdOnly=ifelse(M_Acc==0 & P_Acc==1, 1, 0)) %>%
+          pivot_longer(cols=c(BothRight, BothWrong, MemOnly, ProdOnly),
+                       names_to="Combined_Accuracy") %>%
+          group_by(Pronoun, Combined_Accuracy) %>%
+          summarise(m=mean(value))
+mp_acc
+```
+
+### Model
+
+Model predicting production accuracy with pronoun type and memory
+accuracy. Here, the maximal model includes no random effects.
+
+```{r}
+model_mp_full <- P_Acc ~ M_Acc * Pronoun + 
+  (1 + Pronoun|SubjID) + (1 + Pronoun|Name)
+
+model_mp <- buildmer(model_mp_full, data=mp, 
+            family='binomial', direction=c('order'))
+summary(model_mp)
+```
+
+Convert to odds:
+
+```{r}
+exp(1.49113)  #memory accuracy
+exp(-1.15555) #they/them vs. he/him + she/her * memory accuracy
+```
+
+-   The effect of memory accuracy is significant (p\<.001), such that
+    participants are 4.44x more likely to get the production right if
+    they got the memory right.
+
+-   Significant interaction between pronoun type (they/them vs. he/him +
+    she/her) and memory accuracy (p\<.05) (odds 0.31). The relative
+    difficulty of they/them was attenuated when the participant had
+    correctly remembered the character's pronoun during the memory phase
+    of the task.
