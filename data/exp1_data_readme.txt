@@ -18,10 +18,10 @@ Participant-level variables:
     $ SubjEnglish: Factor w/ 3 levels "Fully competent in speaking listening reading and writing but not native\n",..: 3 3 3 3 3 3 3 3 3 3 ...
     Participant English history, choosing from:
     (86) Native (learned from birth)  
-    (15) Fully competent in speaking, listening, reading, and writing, but not native  (2) 
-    (1)  Limited but adequate competence in speaking, reading, and writing  (3) 
-    (0)  Restricted ability (e.g. only reading or speaking/listening)  (4) 
-    (0)  Some familiarity (e.g. a year of instruction in school)  (5) 
+    (15) Fully competent in speaking, listening, reading, and writing, but not native  
+    (1)  Limited but adequate competence in speaking, reading, and writing  
+    (0)  Restricted ability (e.g. only reading or speaking/listening)  
+    (0)  Some familiarity (e.g. a year of instruction in school)  
 
     $ List         : int  2 2 2 2 2 2 2 2 2 2 ...
     List of stimuli, counterbalancing which names have they/them pronouns.

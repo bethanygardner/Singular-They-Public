@@ -1,0 +1,310 @@
+---
+title: 'Improving memory for and production of singular <i>they</i> pronouns: Experiment 2'
+author: "Bethany Gardner"
+date: "03/24/2022"
+output: 
+  pdf_document:
+    toc: true
+    toc_depth: 3
+  github_document:
+    toc: true
+    toc_depth: 3
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyr)
+library(dplyr)
+options(dplyr.summarise.inform = FALSE)
+library(magrittr)
+library(lmerTest)
+library(buildmer)
+library(broom.mixed)
+```
+
+# Load data
+
+Read data, preprocessed from PCIbex output. See data/exp2_data_readme
+for more details.
+
+```{r}
+d_all <- read.csv("../data/exp2_data.csv", stringsAsFactors=TRUE) %>%
+  rename("Biographies"="Story") #rename to match labeling in paper
+
+d_all$Participant <- as.factor(d_all$Participant)
+d_all$PSA <- as.factor(d_all$PSA)
+d_all$Biographies <- as.factor(d_all$Biographies)
+d_all$X <- NULL
+
+str(d_all)
+```
+
+Set up contrast coding for Pronoun Type. The first contrast compares
+they to he+she. The second contrast compares he to she.
+
+```{r}
+contrasts(d_all$Pronoun)=cbind("_T_HS"=c(.33,.33,-.66), 
+                               "_H_S"=c(-.5,.5, 0))
+contrasts(d_all$Pronoun)
+```
+
+Set up contrast coding for PSA and Biographies conditions. .5 are the
+conditions related to singular they (gendered language PSA, they/them
+biographies); -.5 are the unrelated conditions (unrelated PSA, he/him
+and she/her biographies).
+
+```{r}
+contrasts(d_all$PSA)=cbind("_GenLang"=c(-.5,.5))
+contrasts(d_all$PSA)
+
+contrasts(d_all$Biographies)=cbind("_They"=c(-.5,.5))
+contrasts(d_all$Biographies)
+```
+
+Remove pet and job rows, and the columns that aren't used in the models.
+
+```{r}
+d <- d_all %>% filter (M_Type=="pronoun") %>%
+  select(Participant, Condition, PSA, Biographies, Name, Pronoun, 
+         M_Acc, M_Response, P_Acc, P_Response)
+```
+
+By-participant mean accuracy for memory and production tasks.
+
+```{r}
+d_subj <- d %>% group_by(PSA, Biographies, Participant, Pronoun) %>%
+          summarize(M_Mean=mean(M_Acc), P_Mean=mean(P_Acc))
+```
+
+By-participant mean accuracy for production, split by memory accuracy.
+
+```{r}
+d_acc <- d %>% group_by(PSA, Biographies, Participant, Pronoun, M_Acc) %>%
+          summarize(P_Mean=mean(P_Acc))
+```
+
+If each participant selected/produced they/them at least once.
+
+```{r}
+d_they <- d %>% 
+  mutate(M_IsThey=ifelse(M_Response=="they/them", 1, 0)) %>%
+  mutate(P_IsThey=ifelse(P_Response=="they/them", 1, 0)) %>%
+  group_by(Participant, Condition, PSA, Biographies) %>%
+  summarize(M_Count=sum(M_IsThey),
+            P_Count=sum(P_IsThey)) %>%
+  mutate(M_UseThey=ifelse(M_Count!=0, 1, 0)) %>%
+  mutate(P_UseThey=ifelse(P_Count!=0, 1, 0))
+```
+
+# Memory
+
+### Descriptive Stats
+
+Mean accuracy for all three memory question types.
+
+```{r}
+d_all %>% group_by(M_Type) %>%
+          summarise(acc=mean(M_Acc))
+```
+
+Mean accuracy, split by Pronoun Type, PSA, and Biographies conditions.
+[Both = gendered language PSA + they biographies; PSA = gendered
+language PSA + he/she biographies; Story = unrelated PSA + they
+biographies; Neither = unrelated PSA + he/she biographies.]
+
+```{r}
+d %>% group_by(Pronoun, Condition) %>%
+      summarise(acc=mean(M_Acc))    
+```
+
+90-95% of participants selected they/them at least once.
+
+```{r}
+d_they %>% group_by(Condition) %>% 
+  summarize(Select_They=sum(M_UseThey)) %>%
+  mutate(n=80) %>%
+  mutate(prop=Select_They/n)
+```
+
+### Model
+
+Full model has interactions between Pronoun (2 contrasts), PSA, and
+Biographies; random intercepts and slopes by participant and item.
+buildmer finds the maximal model that will converge (but doesn't then go
+backward to remove non-significant terms, the default setting). The
+final model includes all fixed effects/interactions and random
+intercepts by name.
+
+```{r}
+model_m_full <- M_Acc ~ Pronoun * PSA * Biographies + 
+                (Pronoun|Participant) + (Pronoun|Name)
+
+model_m <- buildmer(model_m_full, d, 
+           family="binomial", direction=c("order"))
+
+summary(model_m)
+```
+
+# Production
+
+### Descriptive Stats
+
+Mean accuracy, split by Pronoun Type, PSA, and Biographies conditions.
+[Both = gendered language PSA + they biographies; PSA = gendered
+language PSA + he/she biographies; Story = unrelated PSA + they
+biographies; Neither = unrelated PSA + he/she biographies.]
+
+```{r}
+d %>% group_by(Pronoun, Condition) %>%
+      summarise(m=mean(P_Acc))    
+```
+
+### Model
+
+Same model specifications as before. The maximal model contains all
+fixed effects/interactions and by-item random intercepts.
+
+```{r}
+model_p_full <- P_Acc ~ Pronoun * PSA * Biographies + 
+                (Pronoun|Participant) + (Pronoun|Name)
+
+model_p <- buildmer(model_p_full, d, 
+           family="binomial", direction=c("order"))
+
+summary(model_p)
+```
+
+### Three-Way Interaction
+
+The main model has Helmert coding for Pronoun and Effects coding (.5,
+-.5) for PSA and Biographies. This means Pronoun (T vs HS) \* PSA \*
+Biographies is testing the interaction between Pronoun and PSA across
+both Biographies conditions.
+
+Dummy coding Biographies with they/them biographies as 1 and he/she
+biographies as 0 tests the interaction between Pronoun and PSA for just
+the he/she Biographies:
+
+```{r}
+
+d %<>% mutate(BioDummy_T=Biographies)
+contrasts(d$BioDummy_T)=cbind("_They1"=c(0,1))
+
+model_p_dummyT <- glmer(P_Acc ~ Pronoun * PSA * BioDummy_T + (1|Name),
+                  data=d, family="binomial")
+
+summary(model_p_dummyT)
+
+```
+
+Conversely, dummy coding Biographies with he/she biographies as 1 and
+they biographies as 0 tests the interaction between Pronoun and PSA for
+just the they Biographies.
+
+```{r}
+d %<>% mutate(BioDummy_HS=Biographies)
+contrasts(d$BioDummy_HS)=cbind("_HeShe"=c(1,0))
+
+model_p_dummyHS <- glmer(P_Acc ~ Pronoun * PSA * BioDummy_HS + (1|Name),
+                        data=d, family="binomial")
+summary(model_p_dummyHS)
+```
+
+The three models to compare:
+
+```{r}
+
+interaction_1 <- tidy(model_p@model) %>% 
+  select(term, estimate, p.value) %>%
+  filter(term=="Pronoun_T_HS" | term=="PSA_GenLang" |
+           term=="Pronoun_T_HS:PSA_GenLang") %>%
+  rename("AcrossBio_Est"="estimate", "AcrossBio_p"="p.value")
+
+interaction_2 <- tidy(model_p_dummyT) %>% 
+  select(term, estimate, p.value) %>%
+  filter(term=="Pronoun_T_HS" | term=="PSA_GenLang" |
+           term=="Pronoun_T_HS:PSA_GenLang") %>%
+  rename("HeSheBio_Est"="estimate", "HeSheBio_p"="p.value") %>%
+  left_join(interaction_1)
+
+interaction_3 <- tidy(model_p_dummyHS) %>% 
+  select(term, estimate, p.value) %>%
+  filter(term=="Pronoun_T_HS" | term=="PSA_GenLang" |
+           term=="Pronoun_T_HS:PSA_GenLang") %>%
+  rename("TheyBio_Est"="estimate", "TheyBio_p"="p.value") %>%
+  left_join(interaction_2)
+
+interaction_3
+
+```
+
+The estimate for the PSA\*Pronoun interaction is -2.34 for the he/she
+biographies and -1.47 for the they biographies, which means that the
+pronoun PSA reduced the relative difficulty of they/them more when
+paired with the he/she biographies than with they biographies.
+Connecting to the plot, the PSA-Neither difference is larger than
+Both-Story difference.
+
+### Producing they/them at least once
+
+```{r}
+d %>% filter(P_Response=="they/them") %>%
+  group_by(Condition) %>% 
+  summarize(they=n_distinct(Participant)) %>%
+  mutate(n=80) %>%
+  mutate(prop=they/n)
+```
+
+Model with whether each participant produced they/them at least once as
+the outcome variable. Higher with the gendered language PSA, no effect
+of Biographies, vaguely trending interaction.
+
+```{r}
+model_p_they <- glm(P_UseThey ~ PSA * Biographies, 
+                d_they, family="binomial")
+summary(model_p_they)
+```
+
+# Memory Predicting Production
+
+### Descriptive Stats
+
+```{r}
+d %>% group_by(Pronoun, Condition, M_Acc) %>%
+      summarise(m=mean(P_Acc))    
+```
+
+Combining the two measures, there are 4 possible patterns: getting both
+right, getting both wrong, getting just memory right, and getting just
+production right.
+
+```{r}
+mp_acc <- d %>% 
+          mutate(BothRight=ifelse(M_Acc==1 & P_Acc==1, 1, 0)) %>%
+          mutate(BothWrong=ifelse(M_Acc==0 & P_Acc==0, 1, 0)) %>%
+          mutate(MemOnly=ifelse(M_Acc==1 & P_Acc==0, 1, 0)) %>%
+          mutate(ProdOnly=ifelse(M_Acc==0 & P_Acc==1, 1, 0)) %>%
+          pivot_longer(cols=c(BothRight, BothWrong, MemOnly, ProdOnly),
+                       names_to="Combined_Accuracy") %>%
+          group_by(Pronoun, Combined_Accuracy) %>%
+          summarise(m=mean(value))
+mp_acc
+```
+
+### Model
+
+Maximal model has interactions between Pronoun (2 contrasts), Memory
+Accuracy, PSA, and Biographies, then random intercepts by item.
+
+```{r}
+model_mp_full <- P_Acc ~ Pronoun * PSA * Biographies * M_Acc + 
+                (Pronoun|Participant) + (Pronoun|Name)
+
+model_mp <- buildmer(model_mp_full, d, 
+                     family="binomial", direction=c("order"))
+
+summary(model_mp)
+```
