@@ -464,7 +464,98 @@ exp2_m_pet_heshe0 <- glmer( # same as buildmer results, just swap CharPronoun
 summary(exp2_m_pet_heshe0)
 ```
 
+# Compare to Exp1
+
 ```{r}
+#| label: compare-exp1-exp2-memory
 
+bind_rows(
+  read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE) %>%
+    filter(M_Type == "pronoun") %>%
+    group_by(Pronoun) %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc)   %>% round(2),
+      exp  = 1
+    ),
+  exp2_d %>%
+    filter(PSA == 0 & Biographies == 0) %>%
+    group_by(Pronoun) %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc)   %>% round(2),
+      exp  = 2
+    )
+)
+```
 
+```{r}
+#| label: compare-exp1-exp2-production
+
+bind_rows(
+  read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE) %>%
+    filter(!is.na(P_Acc)) %>%
+    group_by(Pronoun) %>%
+    summarise(
+      mean = mean(P_Acc) %>% round(2),
+      sd   = sd(P_Acc)   %>% round(2),
+      exp  = 1
+    ),
+  exp2_d %>%
+    filter(PSA == 0 & Biographies == 0) %>%
+    group_by(Pronoun) %>%
+    summarise(
+      mean = mean(P_Acc) %>% round(2),
+      sd   = sd(P_Acc)   %>% round(2),
+      exp  = 2
+    )
+  )
+```
+
+Accuracy for unrelated job question:
+
+```{r}
+#| label: compare-exp1-exp2-job
+
+bind_rows(
+  read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE) %>%
+    filter(M_Type == "job") %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc)   %>% round(2),
+      exp  = 1
+    ),
+  exp2_d_all %>%
+    filter(M_Type == "job") %>%
+    filter(PSA == 0 & Biographies == 0) %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc)   %>% round(2),
+      exp  = 2
+    )
+  )
+```
+
+And for comparison pet question:
+
+```{r}
+#| label: compare-exp1-exp2-pet
+
+bind_rows(
+  read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE) %>%
+    filter(M_Type == "pet") %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc) %>% round(2),
+      exp  = 1
+    ),
+  exp2_d_all %>%
+    filter(M_Type == "pet") %>%
+    filter(PSA == "Gender" & Biographies == "They") %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc) %>% round(2),
+      exp  = 2
+    )
+  )
 ```

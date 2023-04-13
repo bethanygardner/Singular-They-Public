@@ -2082,3 +2082,113 @@ summary(exp2_m_pet_heshe0)
     ## CP_HS0:PSA_GL: -0.251   0.013  
     ## optimizer (Nelder_Mead) convergence code: 0 (OK)
     ## Model failed to converge with max|grad| = 0.00586654 (tol = 0.002, component 1)
+
+# Compare to Exp1
+
+``` r
+bind_rows(
+  read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE) %>%
+    filter(M_Type == "pronoun") %>%
+    group_by(Pronoun) %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc)   %>% round(2),
+      exp  = 1
+    ),
+  exp2_d %>%
+    filter(PSA == 0 & Biographies == 0) %>%
+    group_by(Pronoun) %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc)   %>% round(2),
+      exp  = 2
+    )
+)
+```
+
+    ## # A tibble: 3 × 4
+    ##   Pronoun    mean    sd   exp
+    ##   <fct>     <dbl> <dbl> <dbl>
+    ## 1 he/him     0.76  0.43     1
+    ## 2 she/her    0.77  0.42     1
+    ## 3 they/them  0.44  0.5      1
+
+``` r
+bind_rows(
+  read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE) %>%
+    filter(!is.na(P_Acc)) %>%
+    group_by(Pronoun) %>%
+    summarise(
+      mean = mean(P_Acc) %>% round(2),
+      sd   = sd(P_Acc)   %>% round(2),
+      exp  = 1
+    ),
+  exp2_d %>%
+    filter(PSA == 0 & Biographies == 0) %>%
+    group_by(Pronoun) %>%
+    summarise(
+      mean = mean(P_Acc) %>% round(2),
+      sd   = sd(P_Acc)   %>% round(2),
+      exp  = 2
+    )
+  )
+```
+
+    ## # A tibble: 3 × 4
+    ##   Pronoun    mean    sd   exp
+    ##   <fct>     <dbl> <dbl> <dbl>
+    ## 1 he/him     0.83  0.38     1
+    ## 2 she/her    0.86  0.35     1
+    ## 3 they/them  0.29  0.46     1
+
+Accuracy for unrelated job question:
+
+``` r
+bind_rows(
+  read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE) %>%
+    filter(M_Type == "job") %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc)   %>% round(2),
+      exp  = 1
+    ),
+  exp2_d_all %>%
+    filter(M_Type == "job") %>%
+    filter(PSA == 0 & Biographies == 0) %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc)   %>% round(2),
+      exp  = 2
+    )
+  )
+```
+
+    ##   mean   sd exp
+    ## 1 0.21 0.41   1
+    ## 2  NaN   NA   2
+
+And for comparison pet question:
+
+``` r
+bind_rows(
+  read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE) %>%
+    filter(M_Type == "pet") %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc) %>% round(2),
+      exp  = 1
+    ),
+  exp2_d_all %>%
+    filter(M_Type == "pet") %>%
+    filter(PSA == "Gender" & Biographies == "They") %>%
+    summarise(
+      mean = mean(M_Acc) %>% round(2),
+      sd   = sd(M_Acc) %>% round(2),
+      exp  = 2
+    )
+  )
+```
+
+    ##   mean   sd exp
+    ## 1 0.41 0.49   1
+    ## 2 0.56 0.50   2
