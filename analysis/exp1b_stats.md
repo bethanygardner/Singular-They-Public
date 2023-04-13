@@ -1098,6 +1098,328 @@ exp1b_m_mp_buildmer@model %>%
   correctly remembered the character’s pronoun during the memory phase
   of the task.
 
+# Job/Pet
+
+``` r
+exp1b_d_all %>%
+  filter(M_Type == "job") %>%
+  group_by(Pronoun) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
+```
+
+    ## # A tibble: 3 × 3
+    ##   Pronoun    mean    sd
+    ##   <fct>     <dbl> <dbl>
+    ## 1 he/him     0.28  0.45
+    ## 2 she/her    0.26  0.44
+    ## 3 they/them  0.34  0.47
+
+``` r
+exp1b_d_all %>%
+  filter(M_Type == "pet") %>%
+  group_by(Pronoun) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
+```
+
+    ## # A tibble: 3 × 3
+    ##   Pronoun    mean    sd
+    ##   <fct>     <dbl> <dbl>
+    ## 1 he/him     0.43  0.5 
+    ## 2 she/her    0.44  0.5 
+    ## 3 they/them  0.42  0.49
+
+Compare pet accuracy to pronoun accuracy. Pronoun (renamed to Character
+Pronoun here for clarity) stays contrast coded as before, and Question
+Type (M_Type = pet or pronoun) is mean-center effects coded, comparing
+pet questions to pronoun questions.
+
+``` r
+exp1b_d_pronounsPets <- exp1b_d_all %>%
+  filter(M_Type == "pet" | M_Type == "pronoun") %>%
+  rename("CharPronoun" = "Pronoun")
+
+exp1b_d_pronounsPets$M_Type %<>% droplevels()
+contrasts(exp1b_d_pronounsPets$M_Type) <- cbind(
+  "petQ vs pronounQ" = c(-.5, .5))
+contrasts(exp1b_d_pronounsPets$M_Type)
+```
+
+    ##         petQ vs pronounQ
+    ## pet                 -0.5
+    ## pronoun              0.5
+
+``` r
+exp1b_m_pet <- buildmer(
+  formula = M_Acc ~ CharPronoun * M_Type +
+            (M_Type * CharPronoun | SubjID) +
+            (M_Type * CharPronoun | Name),
+  data = exp1b_d_pronounsPets, family = binomial,
+  buildmerControl(direction = "order"))
+```
+
+    ## Determining predictor order
+
+    ## Fitting via glm: M_Acc ~ 1
+
+    ## Currently evaluating LRT for: CharPronoun, M_Type
+
+    ## Fitting via glm: M_Acc ~ 1 + CharPronoun
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type
+
+    ## Updating formula: M_Acc ~ 1 + M_Type
+
+    ## Currently evaluating LRT for: CharPronoun
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun
+
+    ## Currently evaluating LRT for: CharPronoun:M_Type
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + CharPronoun:M_Type
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + CharPronoun:M_Type
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + CharPronoun:M_Type
+
+    ## Currently evaluating LRT for: 1 | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + (1 | SubjID)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + (1 | Name)
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + (1 | SubjID)
+
+    ## Currently evaluating LRT for: M_Type | SubjID, CharPronoun | SubjID, 1
+    ##     | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + (1 + M_Type | SubjID)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + (1 + CharPronoun | SubjID)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + (1 | SubjID) + (1 | Name)
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + (1 + M_Type | SubjID)
+
+    ## Currently evaluating LRT for: CharPronoun | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + (1 + M_Type + CharPronoun | SubjID)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + (1 + M_Type | SubjID) + (1 | Name)
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + (1 + M_Type | SubjID) + (1 | Name)
+
+    ## Currently evaluating LRT for: CharPronoun | SubjID, M_Type | Name,
+    ##     CharPronoun | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + (1 + M_Type + CharPronoun | SubjID) + (1 |
+    ##     Name)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + (1 + M_Type | SubjID) + (1 + M_Type | Name)
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + (1 + M_Type | SubjID) + (1 + CharPronoun |
+    ##     Name)
+
+    ## Ending the ordering procedure due to having reached the maximal
+    ##     feasible model - all higher models failed to converge. The types of
+    ##     convergence failure are: lme4 reports not having converged (-1)
+    ##     Singular fit
+
+``` r
+summary(exp1b_m_pet)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) (p-values based on Wald z-scores) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun + (1 +  
+    ##     M_Type | SubjID) + (1 | Name)
+    ##    Data: exp1b_d_pronounsPets
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   3013.5   3071.5  -1496.8   2993.5     2414 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -3.0396 -0.8344  0.3886  0.8552  1.6850 
+    ## 
+    ## Random effects:
+    ##  Groups Name                   Variance Std.Dev. Corr
+    ##  SubjID (Intercept)            0.256178 0.50614      
+    ##         M_TypepetQ vs pronounQ 0.176991 0.42070  0.42
+    ##  Name   (Intercept)            0.005328 0.07299      
+    ## Number of obs: 2424, groups:  SubjID, 101; Name, 12
+    ## 
+    ## Fixed effects:
+    ##                                                  Estimate Std. Error  z value
+    ## (Intercept)                                       0.32426    0.07198  4.50507
+    ## M_TypepetQ vs pronounQ                            1.25541    0.10276 12.21664
+    ## CharPronounthey vs he+she                         0.81816    0.09589  8.53251
+    ## CharPronounhe vs she                              0.07462    0.12437  0.60001
+    ## M_TypepetQ vs pronounQ:CharPronounthey vs he+she  1.47364    0.19167  7.68828
+    ## M_TypepetQ vs pronounQ:CharPronounhe vs she       0.02192    0.23069  0.09500
+    ##                                                  Pr(>|z|) Pr(>|t|)    
+    ## (Intercept)                                         0.000 6.64e-06 ***
+    ## M_TypepetQ vs pronounQ                              0.000  < 2e-16 ***
+    ## CharPronounthey vs he+she                           0.000  < 2e-16 ***
+    ## CharPronounhe vs she                                0.549    0.549    
+    ## M_TypepetQ vs pronounQ:CharPronounthey vs he+she    0.000 1.49e-14 ***
+    ## M_TypepetQ vs pronounQ:CharPronounhe vs she         0.924    0.924    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) M_TQvp ChPvh+ ChrPvs M_vpvh
+    ## M_TypptQvpQ 0.231                             
+    ## ChrPrnntvh+ 0.088  0.129                      
+    ## ChrPrnnhvss 0.005  0.007  0.002               
+    ## M_TQvpQ:Cvh 0.091  0.124  0.111  0.007        
+    ## M_TQvpQ:Cvs 0.010  0.011  0.011  0.189  0.009
+
+- Like in main experiment:
+- Significant main effect of Question Type (p\<.001), with higher
+  accuracy for pronouns
+- Significant interaction between Pronoun and Question Type, such that
+  the difference between Question Types is larger for he/him + she/her
+  questions than for they/them characters.
+
+To check this interaction direction, dummy coded Pronoun with they/them
+characters as 0 and he/him and she/her characters as 1
+
+``` r
+exp1b_d_pronounsPets %<>% mutate(CharPronoun_They0 = ifelse(
+  CharPronoun == "they/them", 0, 1))
+
+exp1b_m_pet_they <- glmer(
+  formula = M_Acc ~ CharPronoun_They0 * M_Type + (M_Type | SubjID),
+  data = exp1b_d_pronounsPets, family = binomial,
+)
+
+summary(exp1b_m_pet_they)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: M_Acc ~ CharPronoun_They0 * M_Type + (M_Type | SubjID)
+    ##    Data: exp1b_d_pronounsPets
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   3008.3   3048.9  -1497.2   2994.3     2417 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.9502 -0.8339  0.3947  0.8578  1.6731 
+    ## 
+    ## Random effects:
+    ##  Groups Name                   Variance Std.Dev. Corr
+    ##  SubjID (Intercept)            0.2548   0.5048       
+    ##         M_TypepetQ vs pronounQ 0.1771   0.4208   0.42
+    ## Number of obs: 2424, groups:  SubjID, 101
+    ## 
+    ## Fixed effects:
+    ##                                          Estimate Std. Error z value Pr(>|z|)
+    ## (Intercept)                              -0.21495    0.08897  -2.416   0.0157
+    ## CharPronoun_They0                         0.80796    0.09479   8.523  < 2e-16
+    ## M_TypepetQ vs pronounQ                    0.28248    0.15272   1.850   0.0644
+    ## CharPronoun_They0:M_TypepetQ vs pronounQ  1.45625    0.18959   7.681 1.58e-14
+    ##                                             
+    ## (Intercept)                              *  
+    ## CharPronoun_They0                        ***
+    ## M_TypepetQ vs pronounQ                   .  
+    ## CharPronoun_They0:M_TypepetQ vs pronounQ ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) ChP_T0 M_TQvp
+    ## ChrPrnn_Th0 -0.639              
+    ## M_TypptQvpQ  0.068 -0.005       
+    ## CP_T0:M_Tvp -0.005  0.110 -0.745
+
+- Only trending (p = .064) main effect of Question Type (M_Type) means
+  that there is no difference between pet and pronoun questions when
+  Pronoun is 0 (= for they/them characters).
+
+Now dummy code to get main effect of Question Type in he/him + she/her
+(= 0)
+
+``` r
+exp1b_d_pronounsPets %<>% mutate(CharPronoun_HeShe0 = ifelse(
+  CharPronoun == "they/them", 1, 0))
+
+exp1b_m_pet_heshe <- glmer(
+  formula = M_Acc ~ CharPronoun_HeShe0 * M_Type + (M_Type | SubjID),
+  data = exp1b_d_pronounsPets, family = binomial,
+)
+
+summary(exp1b_m_pet_heshe)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: M_Acc ~ CharPronoun_HeShe0 * M_Type + (M_Type | SubjID)
+    ##    Data: exp1b_d_pronounsPets
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   3008.3   3048.9  -1497.2   2994.3     2417 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.9502 -0.8339  0.3947  0.8578  1.6731 
+    ## 
+    ## Random effects:
+    ##  Groups Name                   Variance Std.Dev. Corr
+    ##  SubjID (Intercept)            0.2548   0.5048       
+    ##         M_TypepetQ vs pronounQ 0.1771   0.4208   0.42
+    ## Number of obs: 2424, groups:  SubjID, 101
+    ## 
+    ## Fixed effects:
+    ##                                           Estimate Std. Error z value Pr(>|z|)
+    ## (Intercept)                                0.59301    0.07820   7.583 3.38e-14
+    ## CharPronoun_HeShe0                        -0.80795    0.09479  -8.523  < 2e-16
+    ## M_TypepetQ vs pronounQ                     1.73873    0.12697  13.694  < 2e-16
+    ## CharPronoun_HeShe0:M_TypepetQ vs pronounQ -1.45626    0.18958  -7.681 1.57e-14
+    ##                                              
+    ## (Intercept)                               ***
+    ## CharPronoun_HeShe0                        ***
+    ## M_TypepetQ vs pronounQ                    ***
+    ## CharPronoun_HeShe0:M_TypepetQ vs pronounQ ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) CP_HS0 M_TQvp
+    ## ChrPrnn_HS0 -0.485              
+    ## M_TypptQvpQ  0.277 -0.158       
+    ## CP_HS0:M_vp -0.128  0.110 -0.597
+
+- Like in main experiment, significant (p \< .001) main effect of
+  Question Type (M_Type) means that pronoun questions were more accurate
+  than pet questions for he/him + she/her characters
 ``` r
 exp(1.49113)  #memory accuracy
 ```

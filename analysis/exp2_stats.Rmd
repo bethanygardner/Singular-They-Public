@@ -303,11 +303,55 @@ Compare pet accuracy to pronoun accuracy. Pronoun (renamed to Character Pronoun 
 ```{r}
 d %>% group_by(Pronoun, Condition, M_Acc) %>%
       summarise(m=mean(P_Acc))    
+#| label: exp2-compare-pets-means
+
+# mean and sd for pets
+exp2_d_all %>%
+  filter(M_Type == "pet") %>%
+  pull(M_Acc) %>%
+  mean()
+exp2_d_all %>%
+  filter(M_Type == "pet") %>%
+  pull(M_Acc) %>%
+  sd()
+
+# subset data
+exp2_d_pronounsPets <- exp2_d_all %>%
+  filter(M_Type == "pet" | M_Type == "pronoun") %>%
+  rename("CharPronoun" = "Pronoun")
+
+# check other contrasts are still in df
+contrasts(exp2_d_pronounsPets$CharPronoun)
+contrasts(exp2_d_pronounsPets$PSA)
+contrasts(exp2_d_pronounsPets$Biographies)
+
+# mean-center effects code question type
+exp2_d_pronounsPets$M_Type %<>% droplevels()
+contrasts(exp2_d_pronounsPets$M_Type) <- cbind(
+  "=Pet_Pronoun" = c(-.5, .5)
+)
+contrasts(exp2_d_pronounsPets$M_Type)
 ```
 
 Combining the two measures, there are 4 possible patterns: getting both
 right, getting both wrong, getting just memory right, and getting just
 production right.
+```{r}
+#| label: exp2-compare-pets-model
+#| cache: true
+
+exp2_m_pet <- buildmer(
+  formula = M_Acc ~ CharPronoun * PSA * Biographies + # conditions
+    M_Type + # add question type
+    CharPronoun * M_Type + # but only its interaction with Pronoun
+    (M_Type * CharPronoun | Participant) +
+    (M_Type * CharPronoun | Name),
+  data = exp2_d_pronounsPets, family = binomial,
+  buildmerControl(direction = "order")
+)
+
+summary(exp2_m_pet)
+```
 
 ```{r}
 mp_acc <- d %>% 
@@ -320,9 +364,44 @@ mp_acc <- d %>%
           group_by(Pronoun, Combined_Accuracy) %>%
           summarise(m=mean(value))
 mp_acc
+#| label: exp2-compare-pets-model-they0
+#| cache: true
+
+exp2_d_pronounsPets %<>% mutate(CharPronoun_They0 = ifelse(
+  CharPronoun == "they/them", 0, 1
+))
+
+exp2_m_pet_they <- glmer( # same as buildmer results, just swap CharPronoun
+  formula = M_Acc ~ M_Type + CharPronoun_They0 + M_Type:CharPronoun_They0 +
+    PSA + Biographies + CharPronoun_They0:PSA + PSA:Biographies +
+    CharPronoun_They0:Biographies +
+    CharPronoun_They0:PSA:Biographies +
+    (1 + M_Type | Name) + (1 | Participant),
+  data = exp2_d_pronounsPets, family = binomial
+)
+
+summary(exp2_m_pet_they)
 ```
 
+```{r}
+#| label: exp2-compare-pets-model-heshe
+#| cache: true
 
+exp2_d_pronounsPets %<>% mutate(CharPronoun_HeShe0 = ifelse(
+  CharPronoun == "they/them", 1, 0
+))
+
+exp2_m_pet_heshe0 <- glmer( # same as buildmer results, just swap CharPronoun
+  formula = M_Acc ~ M_Type + CharPronoun_HeShe0 + M_Type:CharPronoun_HeShe0 +
+    PSA + Biographies + CharPronoun_HeShe0:PSA + PSA:Biographies +
+    CharPronoun_HeShe0:Biographies +
+    CharPronoun_HeShe0:PSA:Biographies +
+    (1 + M_Type | Name) + (1 | Participant),
+  data = exp2_d_pronounsPets, family = binomial
+)
+
+summary(exp2_m_pet_heshe0)
+```
 
 ```{r}
 

@@ -1425,3 +1425,539 @@ summary(exp2_m_mp)
     ## Correlation matrix not shown by default, as p = 24 > 12.
     ## Use print(x, correlation=TRUE)  or
     ##     vcov(x)        if you need it
+
+# Compare Pet Questions
+
+Compare pet accuracy to pronoun accuracy. Pronoun (renamed to Character
+Pronoun here for clarity) stays contrast coded as before and Question
+Type (M_Type = pet or pronoun) is mean-center effects coded, comparing
+pet questions to pronoun questions.
+
+``` r
+# mean and sd for pets
+exp2_d_all %>%
+  filter(M_Type == "pet") %>%
+  pull(M_Acc) %>%
+  mean()
+```
+
+    ## [1] 0.5395833
+
+``` r
+exp2_d_all %>%
+  filter(M_Type == "pet") %>%
+  pull(M_Acc) %>%
+  sd()
+```
+
+    ## [1] 0.4984956
+
+``` r
+# subset data
+exp2_d_pronounsPets <- exp2_d_all %>%
+  filter(M_Type == "pet" | M_Type == "pronoun") %>%
+  rename("CharPronoun" = "Pronoun")
+
+# check other contrasts are still in df
+contrasts(exp2_d_pronounsPets$CharPronoun)
+```
+
+    ##           _T_HS _H_S
+    ## he/him     0.33 -0.5
+    ## she/her    0.33  0.5
+    ## they/them -0.66  0.0
+
+``` r
+contrasts(exp2_d_pronounsPets$PSA)
+```
+
+    ##   _GenLang
+    ## 0     -0.5
+    ## 1      0.5
+
+``` r
+contrasts(exp2_d_pronounsPets$Biographies)
+```
+
+    ##   _They
+    ## 0  -0.5
+    ## 1   0.5
+
+``` r
+# mean-center effects code question type
+exp2_d_pronounsPets$M_Type %<>% droplevels()
+contrasts(exp2_d_pronounsPets$M_Type) <- cbind(
+  "=Pet_Pronoun" = c(-.5, .5)
+)
+contrasts(exp2_d_pronounsPets$M_Type)
+```
+
+    ##         =Pet_Pronoun
+    ## pet             -0.5
+    ## pronoun          0.5
+
+``` r
+exp2_m_pet <- buildmer(
+  formula = M_Acc ~ CharPronoun * PSA * Biographies + # conditions
+    M_Type + # add question type
+    CharPronoun * M_Type + # but only its interaction with Pronoun
+    (M_Type * CharPronoun | Participant) +
+    (M_Type * CharPronoun | Name),
+  data = exp2_d_pronounsPets, family = binomial,
+  buildmerControl(direction = "order")
+)
+```
+
+    ## Determining predictor order
+
+    ## Fitting via glm: M_Acc ~ 1
+
+    ## Currently evaluating LRT for: CharPronoun, PSA, Biographies, M_Type
+
+    ## Fitting via glm: M_Acc ~ 1 + CharPronoun
+
+    ## Fitting via glm: M_Acc ~ 1 + PSA
+
+    ## Fitting via glm: M_Acc ~ 1 + Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type
+
+    ## Updating formula: M_Acc ~ 1 + M_Type
+
+    ## Currently evaluating LRT for: CharPronoun, PSA, Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + PSA
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + Biographies
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun
+
+    ## Currently evaluating LRT for: PSA, Biographies, CharPronoun:M_Type
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + PSA
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + CharPronoun:M_Type
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + CharPronoun:M_Type
+
+    ## Currently evaluating LRT for: PSA, Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + Biographies
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA
+
+    ## Currently evaluating LRT for: CharPronoun:PSA, Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + CharPronoun:PSA
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies
+
+    ## Currently evaluating LRT for: CharPronoun:PSA, CharPronoun:Biographies,
+    ##     PSA:Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + PSA:Biographies
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA
+
+    ## Currently evaluating LRT for: CharPronoun:Biographies, PSA:Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + CharPronoun:Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + PSA:Biographies
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + PSA:Biographies
+
+    ## Currently evaluating LRT for: CharPronoun:Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + PSA:Biographies +
+    ##     CharPronoun:Biographies
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + PSA:Biographies +
+    ##     CharPronoun:Biographies
+
+    ## Currently evaluating LRT for: CharPronoun:PSA:Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + PSA:Biographies +
+    ##     CharPronoun:Biographies + CharPronoun:PSA:Biographies
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + PSA:Biographies +
+    ##     CharPronoun:Biographies + CharPronoun:PSA:Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + PSA:Biographies +
+    ##     CharPronoun:Biographies + CharPronoun:PSA:Biographies
+
+    ## Currently evaluating LRT for: 1 | Participant, 1 | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + PSA + Biographies + CharPronoun:PSA +
+    ##     PSA:Biographies + CharPronoun:Biographies +
+    ##     CharPronoun:PSA:Biographies + (1 | Participant)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + PSA + Biographies + CharPronoun:PSA +
+    ##     PSA:Biographies + CharPronoun:Biographies +
+    ##     CharPronoun:PSA:Biographies + (1 | Name)
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + PSA:Biographies +
+    ##     CharPronoun:Biographies + CharPronoun:PSA:Biographies + (1 | Name)
+
+    ## Currently evaluating LRT for: 1 | Participant, M_Type | Name,
+    ##     CharPronoun | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + PSA + Biographies + CharPronoun:PSA +
+    ##     PSA:Biographies + CharPronoun:Biographies +
+    ##     CharPronoun:PSA:Biographies + (1 | Name) + (1 | Participant)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + PSA + Biographies + CharPronoun:PSA +
+    ##     PSA:Biographies + CharPronoun:Biographies +
+    ##     CharPronoun:PSA:Biographies + (1 + M_Type | Name)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + PSA + Biographies + CharPronoun:PSA +
+    ##     PSA:Biographies + CharPronoun:Biographies +
+    ##     CharPronoun:PSA:Biographies + (1 + CharPronoun | Name)
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + PSA:Biographies +
+    ##     CharPronoun:Biographies + CharPronoun:PSA:Biographies + (1 + M_Type
+    ##     | Name)
+
+    ## Currently evaluating LRT for: 1 | Participant, CharPronoun | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + PSA + Biographies + CharPronoun:PSA +
+    ##     PSA:Biographies + CharPronoun:Biographies +
+    ##     CharPronoun:PSA:Biographies + (1 + M_Type | Name) + (1 |
+    ##     Participant)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + PSA + Biographies + CharPronoun:PSA +
+    ##     PSA:Biographies + CharPronoun:Biographies +
+    ##     CharPronoun:PSA:Biographies + (1 + M_Type + CharPronoun | Name)
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## Updating formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun
+    ##     + PSA + Biographies + CharPronoun:PSA + PSA:Biographies +
+    ##     CharPronoun:Biographies + CharPronoun:PSA:Biographies + (1 + M_Type
+    ##     | Name) + (1 | Participant)
+
+    ## Currently evaluating LRT for: M_Type | Participant, CharPronoun |
+    ##     Participant, CharPronoun | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + PSA + Biographies + CharPronoun:PSA +
+    ##     PSA:Biographies + CharPronoun:Biographies +
+    ##     CharPronoun:PSA:Biographies + (1 + M_Type | Name) + (1 + M_Type |
+    ##     Participant)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + PSA + Biographies + CharPronoun:PSA +
+    ##     PSA:Biographies + CharPronoun:Biographies +
+    ##     CharPronoun:PSA:Biographies + (1 + M_Type | Name) + (1 +
+    ##     CharPronoun | Participant)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + M_Type + CharPronoun +
+    ##     M_Type:CharPronoun + PSA + Biographies + CharPronoun:PSA +
+    ##     PSA:Biographies + CharPronoun:Biographies +
+    ##     CharPronoun:PSA:Biographies + (1 + M_Type + CharPronoun | Name) +
+    ##     (1 | Participant)
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## Ending the ordering procedure due to having reached the maximal
+    ##     feasible model - all higher models failed to converge. The types of
+    ##     convergence failure are: lme4 reports not having converged (-1)
+    ##     Singular fit
+
+``` r
+summary(exp2_m_pet)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) (p-values based on Wald z-scores) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: M_Acc ~ 1 + M_Type + CharPronoun + M_Type:CharPronoun + PSA +  
+    ##     Biographies + CharPronoun:PSA + PSA:Biographies + CharPronoun:Biographies +  
+    ##     CharPronoun:PSA:Biographies + (1 + M_Type | Name) + (1 |      Participant)
+    ##    Data: exp2_d_pronounsPets
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   8533.8   8665.7  -4247.9   8495.8     7661 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -5.8329 -0.7378  0.2709  0.6234  2.8278 
+    ## 
+    ## Random effects:
+    ##  Groups      Name               Variance Std.Dev. Corr
+    ##  Participant (Intercept)        1.88265  1.3721       
+    ##  Name        (Intercept)        0.01135  0.1065       
+    ##              M_Type=Pet_Pronoun 0.01470  0.1212   0.10
+    ## Number of obs: 7680, groups:  Participant, 320; Name, 12
+    ## 
+    ## Fixed effects:
+    ##                                                Estimate Std. Error   z value
+    ## (Intercept)                                    0.837832   0.089130  9.400095
+    ## M_Type=Pet_Pronoun                             1.033577   0.066289 15.591902
+    ## CharPronoun_T_HS                               0.752469   0.058264 12.914730
+    ## CharPronoun_H_S                                0.069688   0.086660  0.804163
+    ## PSA_GenLang                                    0.142134   0.165163  0.860568
+    ## Biographies_They                              -0.123343   0.165169 -0.746764
+    ## M_Type=Pet_Pronoun:CharPronoun_T_HS            1.495172   0.116433 12.841460
+    ## M_Type=Pet_Pronoun:CharPronoun_H_S             0.189143   0.154982  1.220421
+    ## CharPronoun_T_HS:PSA_GenLang                  -0.246769   0.115566 -2.135300
+    ## CharPronoun_H_S:PSA_GenLang                   -0.025878   0.137937 -0.187606
+    ## PSA_GenLang:Biographies_They                   0.166312   0.330313  0.503498
+    ## CharPronoun_T_HS:Biographies_They             -0.010959   0.115657 -0.094753
+    ## CharPronoun_H_S:Biographies_They              -0.007882   0.137987 -0.057124
+    ## CharPronoun_T_HS:PSA_GenLang:Biographies_They  0.083940   0.231164  0.363121
+    ## CharPronoun_H_S:PSA_GenLang:Biographies_They   0.356864   0.275909  1.293414
+    ##                                               Pr(>|z|) Pr(>|t|)    
+    ## (Intercept)                                      0.000   <2e-16 ***
+    ## M_Type=Pet_Pronoun                               0.000   <2e-16 ***
+    ## CharPronoun_T_HS                                 0.000   <2e-16 ***
+    ## CharPronoun_H_S                                  0.421   0.4213    
+    ## PSA_GenLang                                      0.389   0.3895    
+    ## Biographies_They                                 0.455   0.4552    
+    ## M_Type=Pet_Pronoun:CharPronoun_T_HS              0.000   <2e-16 ***
+    ## M_Type=Pet_Pronoun:CharPronoun_H_S               0.222   0.2223    
+    ## CharPronoun_T_HS:PSA_GenLang                     0.033   0.0327 *  
+    ## CharPronoun_H_S:PSA_GenLang                      0.851   0.8512    
+    ## PSA_GenLang:Biographies_They                     0.615   0.6146    
+    ## CharPronoun_T_HS:Biographies_They                0.925   0.9245    
+    ## CharPronoun_H_S:Biographies_They                 0.954   0.9544    
+    ## CharPronoun_T_HS:PSA_GenLang:Biographies_They    0.717   0.7165    
+    ## CharPronoun_H_S:PSA_GenLang:Biographies_They     0.196   0.1959    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    ## 
+    ## Correlation matrix not shown by default, as p = 15 > 12.
+    ## Use print(x, correlation=TRUE)  or
+    ##     vcov(x)        if you need it
+
+``` r
+exp2_d_pronounsPets %<>% mutate(CharPronoun_They0 = ifelse(
+  CharPronoun == "they/them", 0, 1
+))
+
+exp2_m_pet_they <- glmer( # same as buildmer results, just swap CharPronoun
+  formula = M_Acc ~ M_Type + CharPronoun_They0 + M_Type:CharPronoun_They0 +
+    PSA + Biographies + CharPronoun_They0:PSA + PSA:Biographies +
+    CharPronoun_They0:Biographies +
+    CharPronoun_They0:PSA:Biographies +
+    (1 + M_Type | Name) + (1 | Participant),
+  data = exp2_d_pronounsPets, family = binomial
+)
+```
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## Model failed to converge with max|grad| = 0.0192113 (tol = 0.002, component 1)
+
+``` r
+summary(exp2_m_pet_they)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: M_Acc ~ M_Type + CharPronoun_They0 + M_Type:CharPronoun_They0 +  
+    ##     PSA + Biographies + CharPronoun_They0:PSA + PSA:Biographies +  
+    ##     CharPronoun_They0:Biographies + CharPronoun_They0:PSA:Biographies +  
+    ##     (1 + M_Type | Name) + (1 | Participant)
+    ##    Data: exp2_d_pronounsPets
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   8527.3   8624.5  -4249.6   8499.3     7666 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -5.9118 -0.7393  0.2711  0.6229  2.7359 
+    ## 
+    ## Random effects:
+    ##  Groups      Name               Variance Std.Dev. Corr
+    ##  Participant (Intercept)        1.88004  1.3711       
+    ##  Name        (Intercept)        0.01196  0.1094       
+    ##              M_Type=Pet_Pronoun 0.02013  0.1419   0.19
+    ## Number of obs: 7680, groups:  Participant, 320; Name, 12
+    ## 
+    ## Fixed effects:
+    ##                                                 Estimate Std. Error z value
+    ## (Intercept)                                     0.340614   0.095841   3.554
+    ## M_Type=Pet_Pronoun                              0.047406   0.099491   0.476
+    ## CharPronoun_They0                               0.744860   0.057665  12.917
+    ## PSA_GenLang                                     0.304928   0.179862   1.695
+    ## Biographies_They                               -0.117291   0.179891  -0.652
+    ## M_Type=Pet_Pronoun:CharPronoun_They0            1.477859   0.115242  12.824
+    ## CharPronoun_They0:PSA_GenLang                  -0.242827   0.114389  -2.123
+    ## PSA_GenLang:Biographies_They                    0.109200   0.359754   0.304
+    ## CharPronoun_They0:Biographies_They             -0.009991   0.114483  -0.087
+    ## CharPronoun_They0:PSA_GenLang:Biographies_They  0.080498   0.228814   0.352
+    ##                                                Pr(>|z|)    
+    ## (Intercept)                                    0.000379 ***
+    ## M_Type=Pet_Pronoun                             0.633729    
+    ## CharPronoun_They0                               < 2e-16 ***
+    ## PSA_GenLang                                    0.090011 .  
+    ## Biographies_They                               0.514394    
+    ## M_Type=Pet_Pronoun:CharPronoun_They0            < 2e-16 ***
+    ## CharPronoun_They0:PSA_GenLang                  0.033770 *  
+    ## PSA_GenLang:Biographies_They                   0.761478    
+    ## CharPronoun_They0:Biographies_They             0.930456    
+    ## CharPronoun_They0:PSA_GenLang:Biographies_They 0.724982    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##               (Intr) M_Ty=P_P ChP_T0 PSA_GnL Bgrp_T M_T=P_P: ChP_T0:PSA_GL
+    ## M_Typ=Pt_Pr    0.026                                                      
+    ## ChrPrnn_Th0   -0.363  0.000                                               
+    ## PSA_GenLang    0.007  0.001   -0.004                                      
+    ## Bigrphs_Thy   -0.003  0.000   -0.001  0.008                               
+    ## M_T=P_P:CP_    0.009 -0.717    0.072  0.002  -0.001                       
+    ## ChP_T0:PSA_GL -0.006 -0.001    0.010 -0.398  -0.009 -0.002                
+    ## PSA_GnL:B_T    0.009  0.000   -0.008 -0.002   0.006  0.002    0.000       
+    ## ChrP_T0:B_T    0.000  0.000   -0.003 -0.009  -0.398 -0.004    0.024       
+    ## CP_T0:PSA_GL: -0.008  0.000    0.024  0.000  -0.006 -0.002   -0.003       
+    ##               PSA_GL: CP_T0:B
+    ## M_Typ=Pt_Pr                  
+    ## ChrPrnn_Th0                  
+    ## PSA_GenLang                  
+    ## Bigrphs_Thy                  
+    ## M_T=P_P:CP_                  
+    ## ChP_T0:PSA_GL                
+    ## PSA_GnL:B_T                  
+    ## ChrP_T0:B_T   -0.006         
+    ## CP_T0:PSA_GL: -0.398   0.013 
+    ## optimizer (Nelder_Mead) convergence code: 0 (OK)
+    ## Model failed to converge with max|grad| = 0.0192113 (tol = 0.002, component 1)
+
+``` r
+exp2_d_pronounsPets %<>% mutate(CharPronoun_HeShe0 = ifelse(
+  CharPronoun == "they/them", 1, 0
+))
+
+exp2_m_pet_heshe0 <- glmer( # same as buildmer results, just swap CharPronoun
+  formula = M_Acc ~ M_Type + CharPronoun_HeShe0 + M_Type:CharPronoun_HeShe0 +
+    PSA + Biographies + CharPronoun_HeShe0:PSA + PSA:Biographies +
+    CharPronoun_HeShe0:Biographies +
+    CharPronoun_HeShe0:PSA:Biographies +
+    (1 + M_Type | Name) + (1 | Participant),
+  data = exp2_d_pronounsPets, family = binomial
+)
+```
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## Model failed to converge with max|grad| = 0.00586654 (tol = 0.002, component 1)
+
+``` r
+summary(exp2_m_pet_heshe0)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: M_Acc ~ M_Type + CharPronoun_HeShe0 + M_Type:CharPronoun_HeShe0 +  
+    ##     PSA + Biographies + CharPronoun_HeShe0:PSA + PSA:Biographies +  
+    ##     CharPronoun_HeShe0:Biographies + CharPronoun_HeShe0:PSA:Biographies +  
+    ##     (1 + M_Type | Name) + (1 | Participant)
+    ##    Data: exp2_d_pronounsPets
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   8527.3   8624.5  -4249.6   8499.3     7666 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -5.9129 -0.7393  0.2711  0.6230  2.7362 
+    ## 
+    ## Random effects:
+    ##  Groups      Name               Variance Std.Dev. Corr
+    ##  Participant (Intercept)        1.88185  1.3718       
+    ##  Name        (Intercept)        0.01198  0.1095       
+    ##              M_Type=Pet_Pronoun 0.02023  0.1422   0.19
+    ## Number of obs: 7680, groups:  Participant, 320; Name, 12
+    ## 
+    ## Fixed effects:
+    ##                                                 Estimate Std. Error z value
+    ## (Intercept)                                      1.08519    0.09220  11.770
+    ## M_Type=Pet_Pronoun                               1.52543    0.08215  18.569
+    ## CharPronoun_HeShe0                              -0.74420    0.05766 -12.906
+    ## PSA_GenLang                                      0.06099    0.17051   0.358
+    ## Biographies_They                                -0.12744    0.17053  -0.747
+    ## M_Type=Pet_Pronoun:CharPronoun_HeShe0           -1.47885    0.11524 -12.833
+    ## CharPronoun_HeShe0:PSA_GenLang                   0.24424    0.11439   2.135
+    ## PSA_GenLang:Biographies_They                     0.19100    0.34103   0.560
+    ## CharPronoun_HeShe0:Biographies_They              0.01106    0.11448   0.097
+    ## CharPronoun_HeShe0:PSA_GenLang:Biographies_They -0.08021    0.22881  -0.351
+    ##                                                 Pr(>|z|)    
+    ## (Intercept)                                       <2e-16 ***
+    ## M_Type=Pet_Pronoun                                <2e-16 ***
+    ## CharPronoun_HeShe0                                <2e-16 ***
+    ## PSA_GenLang                                       0.7206    
+    ## Biographies_They                                  0.4549    
+    ## M_Type=Pet_Pronoun:CharPronoun_HeShe0             <2e-16 ***
+    ## CharPronoun_HeShe0:PSA_GenLang                    0.0327 *  
+    ## PSA_GenLang:Biographies_They                      0.5754    
+    ## CharPronoun_HeShe0:Biographies_They               0.9230    
+    ## CharPronoun_HeShe0:PSA_GenLang:Biographies_They   0.7259    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##                (Intr) M_Ty=P_P ChP_HS0 PSA_GnL Bgrp_T M_T=P_P: ChP_HS0:PSA_GL
+    ## M_Typ=Pt_Pr     0.110                                                        
+    ## ChrPrnn_HS0    -0.248 -0.101                                                 
+    ## PSA_GenLang     0.005  0.001   -0.002                                        
+    ## Bigrphs_Thy    -0.006 -0.005    0.004   0.007                                
+    ## M_T=P_P:CP_    -0.054 -0.535    0.072  -0.001   0.004                        
+    ## ChP_HS0:PSA_GL  0.000  0.004    0.010  -0.251  -0.006 -0.002                 
+    ## PSA_GnL:B_T     0.009  0.001   -0.007  -0.004   0.004 -0.001    0.003        
+    ## ChP_HS0:B_T     0.003  0.005   -0.003  -0.006  -0.251 -0.004    0.024        
+    ## CP_HS0:PSA_GL: -0.007  0.002    0.024   0.002  -0.002 -0.002   -0.003        
+    ##                PSA_GL: CP_HS0:B
+    ## M_Typ=Pt_Pr                    
+    ## ChrPrnn_HS0                    
+    ## PSA_GenLang                    
+    ## Bigrphs_Thy                    
+    ## M_T=P_P:CP_                    
+    ## ChP_HS0:PSA_GL                 
+    ## PSA_GnL:B_T                    
+    ## ChP_HS0:B_T    -0.002          
+    ## CP_HS0:PSA_GL: -0.251   0.013  
+    ## optimizer (Nelder_Mead) convergence code: 0 (OK)
+    ## Model failed to converge with max|grad| = 0.00586654 (tol = 0.002, component 1)

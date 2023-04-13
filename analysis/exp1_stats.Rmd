@@ -265,9 +265,91 @@ exp1a_m_mp@model %>%
 -   The effect of memory accuracy is significant (p\<.001), such that
     participants are 3.47x more likely to get the production right if
     they got the memory right.
+# Compare Pet Questions
+
+Compare pet accuracy to pronoun accuracy. Pronoun (renamed to Character Pronoun here for clarity) stays contrast coded as before, and Question Type (M_Type = pet or pronoun) is mean-center effects coded, comparing pet questions to pronoun questions.
+
+```{r}
+#| label: exp1-compare-all-means
+
+exp1a_d_all %>%
+  group_by(M_Type, Pronoun) %>%
+  filter(!is.na(M_Acc)) %>%  # production rows
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
+
+exp1a_d_pronounsPets <- exp1a_d_all %>%
+  filter(M_Type == "pet" | M_Type == "pronoun") %>%
+  rename("CharPronoun" = "Pronoun")
+
+exp1a_d_pronounsPets$M_Type %<>% droplevels()
+contrasts(exp1a_d_pronounsPets$M_Type) <- cbind("petQ vs pronounQ" = c(-.5, .5))
+contrasts(exp1a_d_pronounsPets$M_Type)
+```
+
+```{r}
+#| label: exp1-compare-pets-model
+#| cache: true
+
+exp1a_m_pet <- buildmer(
+  formula = M_Acc ~ CharPronoun * M_Type +
+    (M_Type * CharPronoun | SubjID) +
+    (M_Type * CharPronoun | Name),
+  data = exp1a_d_pronounsPets, family = binomial,
+  buildmerControl(direction = "order")
+  )
+
+summary(exp1a_m_pet)
+```
+
+-   Significant main effect of Question Type (p\<.001), with higher accuracy for pronouns (this makes sense seeing the high accuracy rates for he/him and she/her pronoun questions).
+-   Significant interaction between Pronoun and Question Type, such that the difference between Question Types is larger for he/him + she/her questions than for they/them characters.
+
+To check this interaction direction, dummy coded Pronoun with they/them characters as 0 and he/him and she/her characters as 1:
+
+```{r}
+#| label: exp1-compare-pets-model-they0
+#| cache: true
+
+exp1a_d_pronounsPets %<>% mutate(CharPronoun_They0 = ifelse(
+  CharPronoun == "they/them", 0, 1))
+
+exp1a_m_pet_they <- buildmer(
+  formula = M_Acc ~ CharPronoun_They0 * M_Type +
+    (M_Type | SubjID) + (M_Type | Name),
+  data = exp1a_d_pronounsPets, family = binomial,
+  buildmerControl(direction = "order")
+)
+
+summary(exp1a_m_pet_they)
+```
+
+-   Non-significant main effect of Question Type (M_Type) means that there is no difference between pet and pronoun questions when Pronoun is 0 (= for they/them characters).
+
+Now dummy code to get main effect of Question Type in he/him + she/her (= 0)
+
+```{r}
+#| label: exp1-compare-pets-model-heshe0
+#| cache: true
+
+exp1a_d_pronounsPets %<>% mutate(CharPronoun_HeShe0 = ifelse(
+  CharPronoun == "they/them", 1, 0))
+
+exp1a_m_pet_heshe <- buildmer(
+  formula = M_Acc ~ CharPronoun_HeShe0 * M_Type +
+      (M_Type | SubjID) + (M_Type | Name),
+  data = exp1a_d_pronounsPets, family = binomial,
+  buildmerControl(direction = "order")
+)
+
+summary(exp1a_m_pet_heshe)
+```
 
 -   Significant interaction between pronoun type (they/them vs. he/him +
     she/her) and memory accuracy (p\<.05) (odds 0.44). The relative
     difficulty of they/them was attenuated when the participant had
     correctly remembered the character's pronoun during the memory phase
     of the task.
+-   Significant (p \< .001) main effect of Question Type (M_Type) means that the difference is in he/him + she/her characters (but not they/them)
