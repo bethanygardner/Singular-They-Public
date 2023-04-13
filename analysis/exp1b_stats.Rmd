@@ -475,6 +475,153 @@ summary(exp1b_m_pet_heshe)
 
 -   Like in main experiment, significant (p \< .001) main effect of Question Type (M_Type) means that pronoun questions were more accurate than pet questions for he/him + she/her characters
 
+# Compare to Main Experiment
+
+### Load Data
+
+Load main data set.
+
+```{r}
+#| label: exp1b-load-main
+
+exp1a_d_all <- read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE)
+
+m_temp <- exp1a_d_all %>%
+  filter(M_Type == "pronoun") %>%
+  select(SubjID, Name, Pronoun, M_Response, M_Acc)
+p_temp <- exp1a_d_all %>%
+  filter(!is.na(P_Acc)) %>%
+  select(SubjID, Name, Pronoun, P_Pronoun, P_Acc)
+
+exp1a_d <- left_join(m_temp, p_temp, by = c("SubjID", "Name", "Pronoun"))
+remove(m_temp, p_temp)
+
+str(exp1a_d)
+```
+
+```{r}
+#| label: exp1-join-data
+
+exp1_d <- bind_rows(
+  .id = "Experiment",
+  "Exp1A" = exp1a_d,
+  "Exp1B" = exp1b_d
+)
+
+# add contrast coding back to Pronoun
+contrasts(exp1_d$Pronoun) <- cbind(
+  "they vs he+she" = c(.33, .33, -.66),
+  "he vs she" = c(-.5, .5, 0)
+)
+contrasts(exp1_d$Pronoun)
+
+# add factor version/contrast to M_Acc
+exp1_d %<>% mutate(M_Acc_Factor = as.factor(M_Acc))
+contrasts(exp1_d$M_Acc_Factor) <- cbind("wrong vs right" = c(-0.5, +0.5))
+contrasts(exp1_d$M_Acc_Factor)
+
+# now effects code Experiment
+exp1_d$Experiment %<>% as.factor()
+contrasts(exp1_d$Experiment) <- cbind("1A vs 1B" = c(-0.5, +0.5))
+contrasts(exp1_d$Experiment)
+
+str(exp1_d)
+```
+
+### Memory Accuracy
+
+Means for sanity checking:
+
+```{r}
+#| label: exp1-compare-memory-means
+
+exp1_d %>%
+  group_by(Pronoun, Experiment) %>%
+  summarise(mean = mean(M_Acc) %>% round(2))
+```
+
+Now create model with Experiment as a fixed effect.
+
+```{r}
+#| label: exp1-compare-memory-model
+#| cache: true
+
+exp1_m_memory <- buildmer(
+  formula = M_Acc ~ Pronoun * Experiment +
+    (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1_d, family = binomial,
+  buildmerControl(direction = "order")
+)
+
+summary(exp1_m_memory)
+```
+
+-   No main effect of Experiment
+-   And no interaction of Experiment and Pronoun
+
+### Production Accuracy
+
+Means for sanity checking:
+
+```{r}
+#| label: exp1-compare-production-means
+
+exp1_d %>%
+  group_by(Pronoun, Experiment) %>%
+  summarise(mean = mean(P_Acc) %>% round(2))
+```
+
+Model with experiment as a fixed effect:
+
+```{r}
+#| label: exp1-compare-prod-model
+#| cache: true
+
+exp1_m_prod <- buildmer(
+  formula = P_Acc ~ Pronoun * Experiment +
+    (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1_d, family = binomial,
+  buildmerControl(direction = "order")
+)
+
+summary(exp1_m_prod)
+```
+
+-   No main effect of Experiment
+-   But a significant interaction with Pronoun
+    -   In main experiment, the beta estimate for Pronoun (They vs He+She) was 4.12
+    -   In experiment 1B, the beta estimate was 2.47
+    -   Relative difficulty of producing they/them attenuated when production came first
+
+### Memory Predicting Production
+
+Means:
+
+```{r}
+#| label: exp1-compare-mp-means
+
+exp1_d %>%
+  group_by(Pronoun, M_Acc_Factor, Experiment) %>%
+  summarise(mean = mean(P_Acc) %>% round(2)) %>%
+  pivot_wider(names_from = Pronoun, values_from = mean)
+```
+
+```{r}
+#| label: exp1-mp-model
+#| cache: true
+
+exp1_m_mp <- buildmer(
+  formula = P_Acc ~ Pronoun * M_Acc_Factor * Experiment +
+    (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1_d, family = binomial,
+  buildmerControl(direction = "order")
+)
+
+summary(exp1_m_mp)
+```
+
+-   No main effect of or interactions with Experiment
+
 ### Task Difference
 
 Difference score between memory and production for each pronoun for each participant
@@ -510,4 +657,46 @@ summary(exp1_m_diff)
 -   No main effect of experiment
 -   No interactions with pronoun
 
+### Job and pet
 
+Compare job and pet means too:
+
+```{r}
+#| label: exp1-pet-means
+
+exp1_d_pets <- bind_rows(.id     = "Exp",
+  "Exp1A" = exp1a_d_all,
+  "Exp1B" = exp1b_d_all
+  ) %>%
+  filter(M_Type == "pet") %>%
+  select(Exp, SubjID, Pronoun, M_Acc)
+
+exp1_d_pets %>%
+  group_by(Exp) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
+```
+
+-   Pet accuracy for Exp1B is numerically a tiny bit higher
+
+```{r}
+#| label: exp1-job-means
+
+exp1_d_jobs <- bind_rows(.id = "Exp",
+  "Exp1A" = exp1a_d_all,
+  "Exp1B" = exp1b_d_all
+  ) %>%
+  filter(M_Type == "job") %>%
+  select(Exp, SubjID, Pronoun, M_Acc)
+
+exp1_d_jobs %>%
+  group_by(Exp) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
+```
+
+-   Job accuracy for Exp1B is numerically higher, probably significant

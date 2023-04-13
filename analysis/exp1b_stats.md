@@ -1527,8 +1527,591 @@ summary(exp1b_m_pet_heshe)
   Question Type (M_Type) means that pronoun questions were more accurate
   than pet questions for he/him + she/her characters
 
+# Compare to Main Experiment
+
+### Load Data
+
+Load main data set.
+
 ``` r
+exp1a_d_all <- read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE)
+
+m_temp <- exp1a_d_all %>%
+  filter(M_Type == "pronoun") %>%
+  select(SubjID, Name, Pronoun, M_Response, M_Acc)
+p_temp <- exp1a_d_all %>%
+  filter(!is.na(P_Acc)) %>%
+  select(SubjID, Name, Pronoun, P_Pronoun, P_Acc)
+
+exp1a_d <- left_join(m_temp, p_temp, by = c("SubjID", "Name", "Pronoun"))
+remove(m_temp, p_temp)
+
+str(exp1a_d)
 ```
+
+    ## 'data.frame':    1224 obs. of  7 variables:
+    ##  $ SubjID    : Factor w/ 102 levels "R_0qPfWjp8o4W3Z61",..: 84 84 84 84 84 84 84 84 84 84 ...
+    ##  $ Name      : Factor w/ 12 levels "Amanda","Andrew",..: 3 8 4 9 10 12 2 5 1 11 ...
+    ##  $ Pronoun   : Factor w/ 3 levels "he/him","she/her",..: 1 1 3 3 2 2 1 2 2 1 ...
+    ##  $ M_Response: Factor w/ 19 levels "","accountant",..: 9 18 18 18 16 16 9 16 16 9 ...
+    ##  $ M_Acc     : int  1 0 1 1 1 1 1 1 1 1 ...
+    ##  $ P_Pronoun : Factor w/ 5 levels "","he/him","none",..: 2 2 2 4 4 4 2 4 4 2 ...
+    ##  $ P_Acc     : int  1 1 0 0 1 1 1 1 1 1 ...
+
+``` r
+exp1_d <- bind_rows(
+  .id = "Experiment",
+  "Exp1A" = exp1a_d,
+  "Exp1B" = exp1b_d
+)
+
+# add contrast coding back to Pronoun
+contrasts(exp1_d$Pronoun) <- cbind(
+  "they vs he+she" = c(.33, .33, -.66),
+  "he vs she" = c(-.5, .5, 0)
+)
+contrasts(exp1_d$Pronoun)
+```
+
+    ##           they vs he+she he vs she
+    ## he/him              0.33      -0.5
+    ## she/her             0.33       0.5
+    ## they/them          -0.66       0.0
+
+``` r
+# add factor version/contrast to M_Acc
+exp1_d %<>% mutate(M_Acc_Factor = as.factor(M_Acc))
+contrasts(exp1_d$M_Acc_Factor) <- cbind("wrong vs right" = c(-0.5, +0.5))
+contrasts(exp1_d$M_Acc_Factor)
+```
+
+    ##   wrong vs right
+    ## 0           -0.5
+    ## 1            0.5
+
+``` r
+# now effects code Experiment
+exp1_d$Experiment %<>% as.factor()
+contrasts(exp1_d$Experiment) <- cbind("1A vs 1B" = c(-0.5, +0.5))
+contrasts(exp1_d$Experiment)
+```
+
+    ##       1A vs 1B
+    ## Exp1A     -0.5
+    ## Exp1B      0.5
+
+``` r
+str(exp1_d)
+```
+
+    ## 'data.frame':    2436 obs. of  10 variables:
+    ##  $ Experiment       : Factor w/ 2 levels "Exp1A","Exp1B": 1 1 1 1 1 1 1 1 1 1 ...
+    ##   ..- attr(*, "contrasts")= num [1:2, 1] -0.5 0.5
+    ##   .. ..- attr(*, "dimnames")=List of 2
+    ##   .. .. ..$ : chr [1:2] "Exp1A" "Exp1B"
+    ##   .. .. ..$ : chr "1A vs 1B"
+    ##  $ SubjID           : Factor w/ 203 levels "R_0qPfWjp8o4W3Z61",..: 84 84 84 84 84 84 84 84 84 84 ...
+    ##  $ Name             : Factor w/ 12 levels "Amanda","Andrew",..: 3 8 4 9 10 12 2 5 1 11 ...
+    ##  $ Pronoun          : Factor w/ 3 levels "he/him","she/her",..: 1 1 3 3 2 2 1 2 2 1 ...
+    ##   ..- attr(*, "contrasts")= num [1:3, 1:2] 0.33 0.33 -0.66 -0.5 0.5 0
+    ##   .. ..- attr(*, "dimnames")=List of 2
+    ##   .. .. ..$ : chr [1:3] "he/him" "she/her" "they/them"
+    ##   .. .. ..$ : chr [1:2] "they vs he+she" "he vs she"
+    ##  $ M_Response       : Factor w/ 19 levels "","accountant",..: 9 18 18 18 16 16 9 16 16 9 ...
+    ##  $ M_Acc            : int  1 0 1 1 1 1 1 1 1 1 ...
+    ##  $ P_Pronoun        : Factor w/ 5 levels "","he/him","none",..: 2 2 2 4 4 4 2 4 4 2 ...
+    ##  $ P_Acc            : int  1 1 0 0 1 1 1 1 1 1 ...
+    ##  $ Combined_Accuracy: chr  NA NA NA NA ...
+    ##  $ M_Acc_Factor     : Factor w/ 2 levels "0","1": 2 1 2 2 2 2 2 2 2 2 ...
+    ##   ..- attr(*, "contrasts")= num [1:2, 1] -0.5 0.5
+    ##   .. ..- attr(*, "dimnames")=List of 2
+    ##   .. .. ..$ : chr [1:2] "0" "1"
+    ##   .. .. ..$ : chr "wrong vs right"
+
+### Memory Accuracy
+
+Means for sanity checking:
+
+``` r
+exp1_d %>%
+  group_by(Pronoun, Experiment) %>%
+  summarise(mean = mean(M_Acc) %>% round(2))
+```
+
+    ## # A tibble: 6 × 3
+    ## # Groups:   Pronoun [3]
+    ##   Pronoun   Experiment  mean
+    ##   <fct>     <fct>      <dbl>
+    ## 1 he/him    Exp1A       0.76
+    ## 2 he/him    Exp1B       0.79
+    ## 3 she/her   Exp1A       0.77
+    ## 4 she/her   Exp1B       0.8 
+    ## 5 they/them Exp1A       0.44
+    ## 6 they/them Exp1B       0.48
+
+Now create model with Experiment as a fixed effect.
+
+``` r
+exp1_m_memory <- buildmer(
+  formula = M_Acc ~ Pronoun * Experiment +
+    (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1_d, family = binomial,
+  buildmerControl(direction = "order")
+)
+```
+
+    ## Determining predictor order
+
+    ## Fitting via glm: M_Acc ~ 1
+
+    ## Currently evaluating LRT for: Pronoun, Experiment
+
+    ## Fitting via glm: M_Acc ~ 1 + Pronoun
+
+    ## Fitting via glm: M_Acc ~ 1 + Experiment
+
+    ## Updating formula: M_Acc ~ 1 + Pronoun
+
+    ## Currently evaluating LRT for: Experiment
+
+    ## Fitting via glm: M_Acc ~ 1 + Pronoun + Experiment
+
+    ## Updating formula: M_Acc ~ 1 + Pronoun + Experiment
+
+    ## Currently evaluating LRT for: Pronoun:Experiment
+
+    ## Fitting via glm: M_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment
+
+    ## Updating formula: M_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment
+
+    ## Fitting via glm: M_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment
+
+    ## Currently evaluating LRT for: 1 | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Experiment +
+    ##     Pronoun:Experiment + (1 | SubjID)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Experiment +
+    ##     Pronoun:Experiment + (1 | Name)
+
+    ## Updating formula: M_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment
+    ##     + (1 | SubjID)
+
+    ## Currently evaluating LRT for: Pronoun | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Experiment +
+    ##     Pronoun:Experiment + (1 + Pronoun | SubjID)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Experiment +
+    ##     Pronoun:Experiment + (1 | SubjID) + (1 | Name)
+
+    ## Updating formula: M_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment
+    ##     + (1 | SubjID) + (1 | Name)
+
+    ## Currently evaluating LRT for: Pronoun | SubjID, Pronoun | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Experiment +
+    ##     Pronoun:Experiment + (1 + Pronoun | SubjID) + (1 | Name)
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Experiment +
+    ##     Pronoun:Experiment + (1 | SubjID) + (1 + Pronoun | Name)
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## Ending the ordering procedure due to having reached the maximal
+    ##     feasible model - all higher models failed to converge. The types of
+    ##     convergence failure are: lme4 reports not having converged (-1)
+    ##     Singular fit
+
+``` r
+summary(exp1_m_memory)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) (p-values based on Wald z-scores) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: M_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment + (1 |  
+    ##     SubjID) + (1 | Name)
+    ##    Data: exp1_d
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   2793.7   2840.1  -1388.9   2777.7     2428 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.8852 -0.8194  0.4400  0.5799  2.1096 
+    ## 
+    ## Random effects:
+    ##  Groups Name        Variance Std.Dev.
+    ##  SubjID (Intercept) 0.406083 0.63725 
+    ##  Name   (Intercept) 0.005293 0.07275 
+    ## Number of obs: 2436, groups:  SubjID, 203; Name, 12
+    ## 
+    ## Fixed effects:
+    ##                                          Estimate Std. Error  z value Pr(>|z|)
+    ## (Intercept)                               0.86589    0.07034 12.30985    0.000
+    ## Pronounthey vs he+she                     1.58226    0.10069 15.71457    0.000
+    ## Pronounhe vs she                          0.08788    0.13033  0.67425    0.500
+    ## Experiment1A vs 1B                        0.17673    0.13181  1.34077    0.180
+    ## Pronounthey vs he+she:Experiment1A vs 1B -0.04256    0.19588 -0.21726    0.828
+    ## Pronounhe vs she:Experiment1A vs 1B       0.02317    0.24744  0.09363    0.925
+    ##                                          Pr(>|t|)    
+    ## (Intercept)                                <2e-16 ***
+    ## Pronounthey vs he+she                      <2e-16 ***
+    ## Pronounhe vs she                            0.500    
+    ## Experiment1A vs 1B                          0.180    
+    ## Pronounthey vs he+she:Experiment1A vs 1B    0.828    
+    ## Pronounhe vs she:Experiment1A vs 1B         0.925    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) Prnvh+ Prnnvs E1Av1B Pvh+v1
+    ## Prnnthyvsh+ 0.155                             
+    ## Prononhvssh 0.015  0.018                      
+    ## Exprmn1Av1B 0.022  0.023  0.003               
+    ## Pvh+:E1Av1B 0.017  0.014  0.004  0.124        
+    ## Pvsh:E1Av1B 0.003  0.003  0.042  0.014  0.014
+
+- No main effect of Experiment
+- And no interaction of Experiment and Pronoun
+
+### Production Accuracy
+
+Means for sanity checking:
+
+``` r
+exp1_d %>%
+  group_by(Pronoun, Experiment) %>%
+  summarise(mean = mean(P_Acc) %>% round(2))
+```
+
+    ## # A tibble: 6 × 3
+    ## # Groups:   Pronoun [3]
+    ##   Pronoun   Experiment  mean
+    ##   <fct>     <fct>      <dbl>
+    ## 1 he/him    Exp1A       0.83
+    ## 2 he/him    Exp1B       0.84
+    ## 3 she/her   Exp1A       0.86
+    ## 4 she/her   Exp1B       0.84
+    ## 5 they/them Exp1A       0.29
+    ## 6 they/them Exp1B       0.39
+
+Model with experiment as a fixed effect:
+
+``` r
+exp1_m_prod <- buildmer(
+  formula = P_Acc ~ Pronoun * Experiment +
+    (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1_d, family = binomial,
+  buildmerControl(direction = "order")
+)
+```
+
+    ## Determining predictor order
+
+    ## Fitting via glm: P_Acc ~ 1
+
+    ## Currently evaluating LRT for: Pronoun, Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun
+
+    ## Fitting via glm: P_Acc ~ 1 + Experiment
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun
+
+    ## Currently evaluating LRT for: Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + Experiment
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + Experiment
+
+    ## Currently evaluating LRT for: Pronoun:Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment
+
+    ## Currently evaluating LRT for: 1 | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + Experiment +
+    ##     Pronoun:Experiment + (1 | SubjID)
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + Experiment +
+    ##     Pronoun:Experiment + (1 | Name)
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## Ending the ordering procedure due to having reached the maximal
+    ##     feasible model - all higher models failed to converge. The types of
+    ##     convergence failure are: lme4 reports not having converged (2)
+    ##     Singular fit
+
+``` r
+summary(exp1_m_prod)
+```
+
+    ## 
+    ## Call:
+    ## stats::glm(formula = P_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment, 
+    ##     family = binomial, data = exp1_d)
+    ## 
+    ## Deviance Residuals: 
+    ##     Min       1Q   Median       3Q      Max  
+    ## -1.9753  -0.8346   0.5823   0.6087   1.5645  
+    ## 
+    ## Coefficients:
+    ##                                          Estimate Std. Error z value Pr(>|z|)
+    ## (Intercept)                               0.90500    0.05194  17.425   <2e-16
+    ## Pronounthey vs he+she                     2.36985    0.10217  23.194   <2e-16
+    ## Pronounhe vs she                          0.11214    0.13685   0.819   0.4125
+    ## Experiment1A vs 1B                        0.13405    0.10388   1.291   0.1969
+    ## Pronounthey vs he+she:Experiment1A vs 1B -0.45254    0.20435  -2.215   0.0268
+    ## Pronounhe vs she:Experiment1A vs 1B      -0.18691    0.27370  -0.683   0.4947
+    ##                                             
+    ## (Intercept)                              ***
+    ## Pronounthey vs he+she                    ***
+    ## Pronounhe vs she                            
+    ## Experiment1A vs 1B                          
+    ## Pronounthey vs he+she:Experiment1A vs 1B *  
+    ## Pronounhe vs she:Experiment1A vs 1B         
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 3066.8  on 2435  degrees of freedom
+    ## Residual deviance: 2442.4  on 2430  degrees of freedom
+    ## AIC: 2454.4
+    ## 
+    ## Number of Fisher Scoring iterations: 4
+
+- No main effect of Experiment
+- But a significant interaction with Pronoun
+  - In main experiment, the beta estimate for Pronoun (They vs He+She)
+    was 4.12
+  - In experiment 1B, the beta estimate was 2.47
+  - Relative difficulty of producing they/them attenuated when
+    production came first
+
+### Memory Predicting Production
+
+Means:
+
+``` r
+exp1_d %>%
+  group_by(Pronoun, M_Acc_Factor, Experiment) %>%
+  summarise(mean = mean(P_Acc) %>% round(2)) %>%
+  pivot_wider(names_from = Pronoun, values_from = mean)
+```
+
+    ## # A tibble: 4 × 5
+    ## # Groups:   M_Acc_Factor [2]
+    ##   M_Acc_Factor Experiment `he/him` `she/her` `they/them`
+    ##   <fct>        <fct>         <dbl>     <dbl>       <dbl>
+    ## 1 0            Exp1A          0.71      0.75        0.15
+    ## 2 0            Exp1B          0.72      0.69        0.16
+    ## 3 1            Exp1A          0.87      0.89        0.48
+    ## 4 1            Exp1B          0.87      0.88        0.64
+
+``` r
+exp1_m_mp <- buildmer(
+  formula = P_Acc ~ Pronoun * M_Acc_Factor * Experiment +
+    (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1_d, family = binomial,
+  buildmerControl(direction = "order")
+)
+```
+
+    ## Determining predictor order
+
+    ## Fitting via glm: P_Acc ~ 1
+
+    ## Currently evaluating LRT for: Pronoun, M_Acc_Factor, Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun
+
+    ## Fitting via glm: P_Acc ~ 1 + M_Acc_Factor
+
+    ## Fitting via glm: P_Acc ~ 1 + Experiment
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun
+
+    ## Currently evaluating LRT for: M_Acc_Factor, Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + Experiment
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor
+
+    ## Currently evaluating LRT for: Pronoun:M_Acc_Factor, Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + Experiment
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor
+
+    ## Currently evaluating LRT for: Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment
+
+    ## Currently evaluating LRT for: Pronoun:Experiment,
+    ##     M_Acc_Factor:Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment + Pronoun:Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment + M_Acc_Factor:Experiment
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment + Pronoun:Experiment
+
+    ## Currently evaluating LRT for: M_Acc_Factor:Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment + Pronoun:Experiment +
+    ##     M_Acc_Factor:Experiment
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment + Pronoun:Experiment +
+    ##     M_Acc_Factor:Experiment
+
+    ## Currently evaluating LRT for: Pronoun:M_Acc_Factor:Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment + Pronoun:Experiment +
+    ##     M_Acc_Factor:Experiment + Pronoun:M_Acc_Factor:Experiment
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment + Pronoun:Experiment +
+    ##     M_Acc_Factor:Experiment + Pronoun:M_Acc_Factor:Experiment
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment + Pronoun:Experiment +
+    ##     M_Acc_Factor:Experiment + Pronoun:M_Acc_Factor:Experiment
+
+    ## Currently evaluating LRT for: 1 | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment + Pronoun:Experiment +
+    ##     M_Acc_Factor:Experiment + Pronoun:M_Acc_Factor:Experiment + (1 |
+    ##     SubjID)
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + Experiment + Pronoun:Experiment +
+    ##     M_Acc_Factor:Experiment + Pronoun:M_Acc_Factor:Experiment + (1 |
+    ##     Name)
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## Ending the ordering procedure due to having reached the maximal
+    ##     feasible model - all higher models failed to converge. The types of
+    ##     convergence failure are: lme4 reports not having converged (-1)
+    ##     Singular fit
+
+``` r
+summary(exp1_m_mp)
+```
+
+    ## 
+    ## Call:
+    ## stats::glm(formula = P_Acc ~ 1 + Pronoun + M_Acc_Factor + Pronoun:M_Acc_Factor + 
+    ##     Experiment + Pronoun:Experiment + M_Acc_Factor:Experiment + 
+    ##     Pronoun:M_Acc_Factor:Experiment, family = binomial, data = exp1_d)
+    ## 
+    ## Deviance Residuals: 
+    ##     Min       1Q   Median       3Q      Max  
+    ## -2.0978  -0.5656   0.4995   0.5317   1.9554  
+    ## 
+    ## Coefficients:
+    ##                                                                     Estimate
+    ## (Intercept)                                                          0.72914
+    ## Pronounthey vs he+she                                                2.20830
+    ## Pronounhe vs she                                                     0.07848
+    ## M_Acc_Factorwrong vs right                                           1.35418
+    ## Experiment1A vs 1B                                                   0.07523
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right                    -0.93163
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right                          0.12087
+    ## Pronounthey vs he+she:Experiment1A vs 1B                            -0.43529
+    ## Pronounhe vs she:Experiment1A vs 1B                                 -0.23791
+    ## M_Acc_Factorwrong vs right:Experiment1A vs 1B                        0.27392
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right:Experiment1A vs 1B -0.44783
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right:Experiment1A vs 1B       0.23884
+    ##                                                                     Std. Error
+    ## (Intercept)                                                            0.05640
+    ## Pronounthey vs he+she                                                  0.11321
+    ## Pronounhe vs she                                                       0.14637
+    ## M_Acc_Factorwrong vs right                                             0.11280
+    ## Experiment1A vs 1B                                                     0.11280
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right                       0.22642
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right                            0.29274
+    ## Pronounthey vs he+she:Experiment1A vs 1B                               0.22642
+    ## Pronounhe vs she:Experiment1A vs 1B                                    0.29274
+    ## M_Acc_Factorwrong vs right:Experiment1A vs 1B                          0.22560
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right:Experiment1A vs 1B    0.45283
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right:Experiment1A vs 1B         0.58548
+    ##                                                                     z value
+    ## (Intercept)                                                          12.928
+    ## Pronounthey vs he+she                                                19.506
+    ## Pronounhe vs she                                                      0.536
+    ## M_Acc_Factorwrong vs right                                           12.005
+    ## Experiment1A vs 1B                                                    0.667
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right                     -4.115
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right                           0.413
+    ## Pronounthey vs he+she:Experiment1A vs 1B                             -1.923
+    ## Pronounhe vs she:Experiment1A vs 1B                                  -0.813
+    ## M_Acc_Factorwrong vs right:Experiment1A vs 1B                         1.214
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right:Experiment1A vs 1B  -0.989
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right:Experiment1A vs 1B        0.408
+    ##                                                                     Pr(>|z|)
+    ## (Intercept)                                                          < 2e-16
+    ## Pronounthey vs he+she                                                < 2e-16
+    ## Pronounhe vs she                                                      0.5919
+    ## M_Acc_Factorwrong vs right                                           < 2e-16
+    ## Experiment1A vs 1B                                                    0.5048
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right                    3.88e-05
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right                           0.6797
+    ## Pronounthey vs he+she:Experiment1A vs 1B                              0.0545
+    ## Pronounhe vs she:Experiment1A vs 1B                                   0.4164
+    ## M_Acc_Factorwrong vs right:Experiment1A vs 1B                         0.2247
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right:Experiment1A vs 1B   0.3227
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right:Experiment1A vs 1B        0.6833
+    ##                                                                        
+    ## (Intercept)                                                         ***
+    ## Pronounthey vs he+she                                               ***
+    ## Pronounhe vs she                                                       
+    ## M_Acc_Factorwrong vs right                                          ***
+    ## Experiment1A vs 1B                                                     
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right                    ***
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right                            
+    ## Pronounthey vs he+she:Experiment1A vs 1B                            .  
+    ## Pronounhe vs she:Experiment1A vs 1B                                    
+    ## M_Acc_Factorwrong vs right:Experiment1A vs 1B                          
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right:Experiment1A vs 1B    
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right:Experiment1A vs 1B         
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 3066.8  on 2435  degrees of freedom
+    ## Residual deviance: 2234.8  on 2424  degrees of freedom
+    ## AIC: 2258.8
+    ## 
+    ## Number of Fisher Scoring iterations: 4
+
+- No main effect of or interactions with Experiment
 
 ### Task Difference
 
@@ -1609,3 +2192,54 @@ summary(exp1_m_diff)
 - No main effect of experiment
 - No interactions with pronoun
 
+### Job and pet
+
+Compare job and pet means too:
+
+``` r
+exp1_d_pets <- bind_rows(.id     = "Exp",
+  "Exp1A" = exp1a_d_all,
+  "Exp1B" = exp1b_d_all
+  ) %>%
+  filter(M_Type == "pet") %>%
+  select(Exp, SubjID, Pronoun, M_Acc)
+
+exp1_d_pets %>%
+  group_by(Exp) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
+```
+
+    ## # A tibble: 2 × 3
+    ##   Exp    mean    sd
+    ##   <chr> <dbl> <dbl>
+    ## 1 Exp1A  0.41  0.49
+    ## 2 Exp1B  0.43  0.5
+
+- Pet accuracy for Exp1B is numerically a tiny bit higher
+
+``` r
+exp1_d_jobs <- bind_rows(.id = "Exp",
+  "Exp1A" = exp1a_d_all,
+  "Exp1B" = exp1b_d_all
+  ) %>%
+  filter(M_Type == "job") %>%
+  select(Exp, SubjID, Pronoun, M_Acc)
+
+exp1_d_jobs %>%
+  group_by(Exp) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
+```
+
+    ## # A tibble: 2 × 3
+    ##   Exp    mean    sd
+    ##   <chr> <dbl> <dbl>
+    ## 1 Exp1A  0.21  0.41
+    ## 2 Exp1B  0.29  0.45
+
+- Job accuracy for Exp1B is numerically higher, probably significant
