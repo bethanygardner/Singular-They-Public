@@ -64,15 +64,15 @@ exp2_p_memory_PSA <- exp2_d %>%
   mutate(Condition = str_c(PSA, Biographies, sep = " + ")) %>%
   ggplot(aes(
     x = Pronoun_Group, y = y, ymin = ymin, ymax = ymax,
-    group = Condition, color = PSA)
+    group = Condition, color = fct_rev(PSA))
   ) +
-  geom_line(aes(linetype = Biographies)) +
+  geom_line(aes(linetype = fct_rev(Biographies))) +
   geom_pointrange(size = 0.25) +
   scale_color_manual(
-    labels = c("Gendered\nLanguage", "Unrelated"),
+    labels = c("0" = "Unrelated", "1" = "Gendered\nLanguage"),
     values = c("tomato3", "#367ABF")
   ) +
-  scale_linetype_discrete(labels = c("They", "He/She")) +
+  scale_linetype_discrete(labels = c("1" = "They", "0" = "He/She")) +
   scale_x_discrete(expand = c(0.06, 0.06)) +
   theme_classic() +
   exp2_theme +
@@ -82,6 +82,7 @@ exp2_p_memory_PSA <- exp2_d %>%
   labs(
     x        = element_blank(),
     y        = "Mean Accuracy",
+    color    = "PSA",
     linetype = "Biography"
   )
 
@@ -154,15 +155,15 @@ exp2_p_prod_PSA <- exp2_d %>%
   mutate(Condition = str_c(PSA, Biographies, sep = " + ")) %>%
   ggplot(aes(
     x = Pronoun_Group, y = y, ymin = ymin, ymax = ymax,
-    group = Condition, color = PSA)
+    group = Condition, color = fct_rev(PSA))
   ) +
-  geom_line(aes(linetype = Biographies)) +
+  geom_line(aes(linetype = fct_rev(Biographies))) +
   geom_pointrange(size = 0.25) +
   scale_color_manual(
-    labels = c("Gendered\nLanguage", "Unrelated"),
+    labels = c("0" = "Unrelated", "1" = "Gendered\nLanguage"),
     values = c("tomato3", "#367ABF")
   ) +
-  scale_linetype_discrete(labels = c("They", "He/She")) +
+  scale_linetype_discrete(labels = c("1" = "They", "0" = "He/She")) +
   scale_x_discrete(expand = c(0.05, 0.05)) +
   scale_y_continuous(limits = c(0, 1)) +
   theme_classic() +
@@ -173,6 +174,7 @@ exp2_p_prod_PSA <- exp2_d %>%
   labs(
     x        = element_blank(),
     y        = "Mean Accuracy",
+    color    = "PSA",
     linetype = "Biography"
   )
 
