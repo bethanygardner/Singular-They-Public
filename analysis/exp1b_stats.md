@@ -2,18 +2,33 @@ Improving memory for and production of singular <i>they</i> pronouns:
 Experiment 1B
 ================
 Bethany Gardner
-03/24/2022
+03/24/2022, 04/08/2023
 
--   [Load Data](#load-data)
--   [Memory](#memory)
-    -   [Descriptive Stats](#descriptive-stats)
-    -   [Model](#model)
--   [Production](#production)
-    -   [Descriptive Stats](#descriptive-stats-1)
-    -   [Model](#model-1)
--   [Memory Predicting Production](#memory-predicting-production)
-    -   [Descriptive Stats](#descriptive-stats-2)
-    -   [Model](#model-2)
+- <a href="#load-data" id="toc-load-data">Load Data</a>
+- <a href="#memory" id="toc-memory">Memory</a>
+  - <a href="#descriptive-stats" id="toc-descriptive-stats">Descriptive
+    Stats</a>
+  - <a href="#model" id="toc-model">Model</a>
+- <a href="#production" id="toc-production">Production</a>
+  - <a href="#descriptive-stats-1" id="toc-descriptive-stats-1">Descriptive
+    Stats</a>
+  - <a href="#model-1" id="toc-model-1">Model</a>
+- <a href="#memory-predicting-production"
+  id="toc-memory-predicting-production">Memory Predicting Production</a>
+  - <a href="#descriptive-stats-2" id="toc-descriptive-stats-2">Descriptive
+    Stats</a>
+  - <a href="#model-2" id="toc-model-2">Model</a>
+- <a href="#jobpet" id="toc-jobpet">Job/Pet</a>
+- <a href="#compare-to-main-experiment"
+  id="toc-compare-to-main-experiment">Compare to Main Experiment</a>
+  - <a href="#load-data-1" id="toc-load-data-1">Load Data</a>
+  - <a href="#memory-accuracy" id="toc-memory-accuracy">Memory Accuracy</a>
+  - <a href="#production-accuracy" id="toc-production-accuracy">Production
+    Accuracy</a>
+  - <a href="#memory-predicting-production-1"
+    id="toc-memory-predicting-production-1">Memory Predicting Production</a>
+  - <a href="#task-difference" id="toc-task-difference">Task Difference</a>
+  - <a href="#job-and-pet" id="toc-job-and-pet">Job and pet</a>
 
 This is a replication of the first experiment. Everything is identical,
 except that the production task occurs before the memory task.
@@ -24,8 +39,8 @@ Read data, preprocessed from Qualtrics output. See
 data/exp1b_data_readme for more details.
 
 ``` r
-d <- read.csv("../data/exp1b_data.csv", stringsAsFactors=TRUE)
-str(d)
+exp1b_d_all <- read.csv("data/exp1b_data.csv", stringsAsFactors = TRUE)
+str(exp1b_d_all)
 ```
 
     ## 'data.frame':    5151 obs. of  17 variables:
@@ -51,9 +66,11 @@ Set up contrast coding. The first contrast compares they to he+she. The
 second contrast compares he to she.
 
 ``` r
-contrasts(d$Pronoun) = cbind("they vs he+she"=c(.33,.33,-.66), 
-                             "he vs she"=c(-.5,.5, 0))
-contrasts(d$Pronoun)
+contrasts(exp1b_d_all$Pronoun) <- cbind(
+  "they vs he+she" = c(.33, .33, -.66),
+  "he vs she"      = c(-.5, .5, 0)
+)
+contrasts(exp1b_d_all$Pronoun)
 ```
 
     ##           they vs he+she he vs she
@@ -61,45 +78,35 @@ contrasts(d$Pronoun)
     ## she/her             0.33       0.5
     ## they/them          -0.66       0.0
 
-Split data by task, and only keep pronoun questions (not the job or pet
-questions) in memory dataframe.
+Combine pronoun memory and production trials to make one row for each
+character.
 
 ``` r
-m <- d %>% filter(M_Type=="pronoun")
-p <- d %>% filter(Task=="production")
+m_temp <- exp1b_d_all %>%
+  filter(M_Type == "pronoun") %>%
+  select(SubjID, Name, Pronoun, M_Response, M_Acc)
+p_temp <- exp1b_d_all %>%
+  filter(!is.na(P_Acc)) %>%
+  select(SubjID, Name, Pronoun, P_Pronoun, P_Acc)
+
+exp1b_d <- left_join(m_temp, p_temp, by = c("SubjID", "Name", "Pronoun"))
+remove(m_temp, p_temp)
+
+str(exp1b_d)
 ```
 
-Combine memory and production trials to make one row for each character.
-
-``` r
-#Get pronoun memory and production observations. Filter out memory for job and pet questions, and introduction pilot task questions.
-mp <- d %>% filter(Task != "introduction" & 
-                   M_Type != "job" &
-                   M_Type != "pet") 
-
-#Just take columns used in model
-m_temp <- mp %>% select(M_Acc, Pronoun, Name, SubjID) %>%
-  filter(!is.na(M_Acc)) #Take out empty rows that were other question types
-
-#Get production accuracy column
-p_temp <- mp %>% select(P_Acc)  %>%
-    filter(!is.na(P_Acc)) #Take out empty rows that were other question types
-
-#Combine
-mp <- cbind(m_temp, p_temp) 
-str(mp)
-```
-
-    ## 'data.frame':    1212 obs. of  5 variables:
-    ##  $ M_Acc  : int  1 1 1 1 1 1 1 1 0 1 ...
-    ##  $ Pronoun: Factor w/ 3 levels "he/him","she/her",..: 1 1 3 3 2 2 1 2 2 1 ...
+    ## 'data.frame':    1212 obs. of  7 variables:
+    ##  $ SubjID    : Factor w/ 101 levels "R_10uYBrhUOzbUAGV",..: 82 82 82 82 82 82 82 82 82 82 ...
+    ##  $ Name      : Factor w/ 12 levels "Amanda","Andrew",..: 3 8 4 9 10 12 2 5 1 11 ...
+    ##  $ Pronoun   : Factor w/ 3 levels "he/him","she/her",..: 1 1 3 3 2 2 1 2 2 1 ...
     ##   ..- attr(*, "contrasts")= num [1:3, 1:2] 0.33 0.33 -0.66 -0.5 0.5 0
     ##   .. ..- attr(*, "dimnames")=List of 2
     ##   .. .. ..$ : chr [1:3] "he/him" "she/her" "they/them"
     ##   .. .. ..$ : chr [1:2] "they vs he+she" "he vs she"
-    ##  $ Name   : Factor w/ 12 levels "Amanda","Andrew",..: 3 8 4 9 10 12 2 5 1 11 ...
-    ##  $ SubjID : Factor w/ 101 levels "R_10uYBrhUOzbUAGV",..: 82 82 82 82 82 82 82 82 82 82 ...
-    ##  $ P_Acc  : int  1 0 1 1 1 1 1 1 1 1 ...
+    ##  $ M_Response: Factor w/ 19 levels "","accountant",..: 9 9 18 18 16 16 9 16 18 9 ...
+    ##  $ M_Acc     : int  1 1 1 1 1 1 1 1 0 1 ...
+    ##  $ P_Pronoun : Factor w/ 5 levels "","he/him","none",..: 2 5 5 5 4 4 2 4 4 2 ...
+    ##  $ P_Acc     : int  1 0 1 1 1 1 1 1 1 1 ...
 
 # Memory
 
@@ -108,35 +115,48 @@ str(mp)
 Mean accuracy for all three memory question types.
 
 ``` r
-prop.table(table(d$M_Type, d$M_Acc), margin=1)
+exp1b_d_all %>%
+  filter(!is.na(M_Acc)) %>%
+  group_by(M_Type) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
 ```
 
-    ##          
-    ##                   0         1
-    ##                              
-    ##   job     0.7079208 0.2920792
-    ##   pet     0.5717822 0.4282178
-    ##   pronoun 0.3094059 0.6905941
+    ## # A tibble: 3 × 3
+    ##   M_Type   mean    sd
+    ##   <fct>   <dbl> <dbl>
+    ## 1 job      0.29  0.45
+    ## 2 pet      0.43  0.5 
+    ## 3 pronoun  0.69  0.46
 
 Mean accuracy, split by pronoun type.
 
 ``` r
-prop.table(table(m$Pronoun, m$M_Acc), margin=1)
+exp1b_d %>%
+  mutate(Pronoun_Group = ifelse(Pronoun == "they/them", "They", "He + She")) %>%
+  group_by(Pronoun_Group) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
 ```
 
-    ##            
-    ##                     0         1
-    ##   he/him    0.2128713 0.7871287
-    ##   she/her   0.1980198 0.8019802
-    ##   they/them 0.5173267 0.4826733
+    ## # A tibble: 2 × 3
+    ##   Pronoun_Group  mean    sd
+    ##   <chr>         <dbl> <dbl>
+    ## 1 He + She       0.79   0.4
+    ## 2 They           0.48   0.5
 
 96% of participants selected they/them at least once.
 
 ``` r
-they_m <- d %>% filter(M_Response=="they/them") %>%
-  summarize(n=n_distinct(SubjID)) 
+exp1b_r_memory_usedThey <- exp1b_d %>%
+  filter(M_Response == "they/them") %>%
+  summarise(n = n_distinct(SubjID))
 
-they_m/(n_distinct(d$SubjID))
+exp1b_r_memory_usedThey / (n_distinct(exp1b_d$SubjID))
 ```
 
     ##          n
@@ -148,10 +168,11 @@ Start with model that has random intercepts and slopes for participant
 and item. Maximal model has by-participant random intercepts only.
 
 ``` r
-model_m_full <- M_Acc ~ Pronoun + (1 + Pronoun|SubjID) + (1 + Pronoun|Name)
-
-model_m <- buildmer(model_m_full, data=m, 
-                    family='binomial', direction=c('order'))
+exp1b_m_memory <- buildmer(
+  formula = M_Acc ~ Pronoun + (1 + Pronoun | SubjID) + (1 + Pronoun | Name),
+  data = exp1b_d, family = binomial,
+  buildmerControl(direction = "order")
+)
 ```
 
     ## Determining predictor order
@@ -166,114 +187,156 @@ model_m <- buildmer(model_m_full, data=m,
 
     ## Fitting via glm: M_Acc ~ 1 + Pronoun
 
-    ## Currently evaluating LRT for: 1 | Name, 1 | SubjID
+    ## Currently evaluating LRT for: 1 | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + (1 | SubjID)
 
     ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + (1 | Name)
 
     ## boundary (singular) fit: see help('isSingular')
 
-    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + (1 | SubjID)
-
     ## Updating formula: M_Acc ~ 1 + Pronoun + (1 | SubjID)
 
-    ## Currently evaluating LRT for: 1 | Name, Pronoun | SubjID
+    ## Currently evaluating LRT for: Pronoun | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + (1 + Pronoun |
+    ##     SubjID)
 
     ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + (1 | SubjID) + (1 |
     ##     Name)
 
     ## boundary (singular) fit: see help('isSingular')
 
+    ## Updating formula: M_Acc ~ 1 + Pronoun + (1 + Pronoun | SubjID)
+
+    ## Currently evaluating LRT for: 1 | Name
+
     ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + (1 + Pronoun |
-    ##     SubjID)
+    ##     SubjID) + (1 | Name)
+
+    ## boundary (singular) fit: see help('isSingular')
 
     ## Ending the ordering procedure due to having reached the maximal
     ##     feasible model - all higher models failed to converge. The types of
-    ##     convergence failure are: Singular fit lme4 reports not having
-    ##     converged (-1)
+    ##     convergence failure are: Singular fit
 
 ``` r
-summary(model_m)
+summary(exp1b_m_memory)
 ```
 
     ## Generalized linear mixed model fit by maximum likelihood (Laplace
     ##   Approximation) (p-values based on Wald z-scores) [glmerMod]
     ##  Family: binomial  ( logit )
-    ## Formula: M_Acc ~ 1 + Pronoun + (1 | SubjID)
-    ##    Data: m
+    ## Formula: M_Acc ~ 1 + Pronoun + (1 + Pronoun | SubjID)
+    ##    Data: exp1b_d
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
-    ##   1368.6   1389.0   -680.3   1360.6     1208 
+    ##   1367.8   1413.7   -674.9   1349.8     1203 
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -2.8110 -0.8346  0.4172  0.5693  1.7603 
+    ## -2.5497 -0.8096  0.3707  0.5848  1.3200 
     ## 
     ## Random effects:
-    ##  Groups Name        Variance Std.Dev.
-    ##  SubjID (Intercept) 0.3804   0.6168  
+    ##  Groups Name                  Variance Std.Dev. Corr     
+    ##  SubjID (Intercept)           0.4874   0.6981            
+    ##         Pronounthey vs he+she 0.8763   0.9361   0.59     
+    ##         Pronounhe vs she      0.1645   0.4055   0.62 1.00
     ## Number of obs: 1212, groups:  SubjID, 101
     ## 
     ## Fixed effects:
-    ##                       Estimate Std. Error  z value Pr(>|z|) Pr(>|t|)    
-    ## (Intercept)            0.94930    0.09466 10.02807    0.000   <2e-16 ***
-    ## Pronounthey vs he+she  1.55205    0.14263 10.88181    0.000   <2e-16 ***
-    ## Pronounhe vs she       0.09637    0.17857  0.53971    0.589    0.589    
+    ##                       Estimate Std. Error z value Pr(>|z|) Pr(>|t|)    
+    ## (Intercept)             1.0379     0.1098  9.4549    0.000   <2e-16 ***
+    ## Pronounthey vs he+she   1.6866     0.1831  9.2099    0.000   <2e-16 ***
+    ## Pronounhe vs she        0.2568     0.2423  1.0600    0.289    0.289    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
     ##             (Intr) Prnvh+
-    ## Prnnthyvsh+ 0.181        
-    ## Prononhvssh 0.018  0.018
+    ## Prnnthyvsh+ 0.464        
+    ## Prononhvssh 0.210  0.216
 
 Convert to odds:
 
 ``` r
-exp(0.94930) #intercept (mean)
+# intercept (mean)
+exp1b_m_memory@model %>% get_intercept() %>% exp()
 ```
 
-    ## [1] 2.5839
+    ## [1] 2.823393
 
 ``` r
-exp(1.55205) #they/them vs. he/him + she/her
+# they/them vs. he/him + she/her
+exp1b_m_memory@model %>%
+  get_parameters() %>%
+  filter(Parameter == "Pronounthey vs he+she") %>%
+  pull(Estimate) %>%
+  exp()
 ```
 
-    ## [1] 4.721139
+    ## [1] 5.401342
 
--   The intercept is significant (p\<.001), such that participants are
-    2.58 times more likely to answer correctly than incorrectly across
-    all pronoun types.
+- The intercept is significant (p\<.001), such that participants are
+  2.82 times more likely to answer correctly than incorrectly across all
+  pronoun types.
 
--   The contrast between they/them and he/him + she/her is significant
-    (p\<.001), such that participants are 4.72 times more likely to get
-    he/him and she/her right than they/them.
+- The contrast between they/them and he/him + she/her is significant
+  (p\<.001), such that participants are 5.40 times more likely to get
+  he/him and she/her right than they/them.
 
--   The contrast between he/him and she/her is not significant.
+- The contrast between he/him and she/her is not significant.
 
 # Production
 
 ### Descriptive Stats
 
-Mean accuracy, split by pronoun type. Accuracy for producing they/them
-is lower than accuracy for remembering they/them.
+Mean accuracy, split by pronoun type.
 
 ``` r
-prop.table(table(p$Pronoun, p$P_Acc), margin=1)
+exp1b_d %>%
+  mutate(Pronoun_Group = ifelse(Pronoun == "they/them", "They", "He + She")) %>%
+  group_by(Pronoun_Group) %>%
+  summarise(
+    mean = mean(P_Acc) %>% round(2),
+    sd   = sd(P_Acc)   %>% round(2)
+  )
+```
+
+    ## # A tibble: 2 × 3
+    ##   Pronoun_Group  mean    sd
+    ##   <chr>         <dbl> <dbl>
+    ## 1 He + She       0.84  0.36
+    ## 2 They           0.39  0.49
+
+Responses that did not use a pronoun are infrequent and evenly
+distributed across pronoun conditions.
+
+``` r
+table(exp1b_d$Pronoun, exp1b_d$P_Pronoun)
 ```
 
     ##            
-    ##                     0         1
-    ##   he/him    0.1584158 0.8415842
-    ##   she/her   0.1559406 0.8440594
-    ##   they/them 0.6089109 0.3910891
+    ##                 he/him none she/her they/them
+    ##   he/him      0    340   14       1        49
+    ##   she/her     0      1   15     341        47
+    ##   they/them   0    124   12     110       158
+
+``` r
+(exp1b_d %>% filter(P_Pronoun == "none") %>% pull(P_Pronoun) %>% length()) /
+(exp1b_d %>% pull(P_Pronoun) %>% length())
+```
+
+    ## [1] 0.03382838
 
 71% of participants produced they/them at least once.
 
 ``` r
-they_p <- d %>% filter(P_Pronoun=="they/them") %>%
-  summarize(n=n_distinct(SubjID)) 
+exp1b_r_prod_usedThey <- exp1b_d %>%
+  filter(P_Pronoun == "they/them") %>%
+  summarize(n = n_distinct(SubjID))
 
-they_p/(n_distinct(d$SubjID))
+exp1b_r_prod_usedThey / (n_distinct(exp1b_d$SubjID))
 ```
 
     ##           n
@@ -286,11 +349,11 @@ and item, using same specifications as before. Maximal model has random
 intercepts by participant and item, and no random slopes.
 
 ``` r
-model_p_full <- P_Acc ~ Pronoun + 
-  (1 + Pronoun|SubjID) + (1 + Pronoun|Name)
-
-model_p <- buildmer(model_p_full, data=p, 
-          family='binomial', direction=c('order'))
+exp1b_m_prod <- buildmer(
+  formula = P_Acc ~ Pronoun + (1 + Pronoun | SubjID) + (1 + Pronoun | Name),
+  data = exp1b_d, family = binomial,
+  buildmerControl(direction = "order")
+)
 ```
 
     ## Determining predictor order
@@ -305,50 +368,50 @@ model_p <- buildmer(model_p_full, data=p,
 
     ## Fitting via glm: P_Acc ~ 1 + Pronoun
 
-    ## Currently evaluating LRT for: 1 | Name, 1 | SubjID
+    ## Currently evaluating LRT for: 1 | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + (1 | SubjID)
 
     ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + (1 | Name)
 
     ## boundary (singular) fit: see help('isSingular')
 
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + (1 | SubjID)
-
     ## Updating formula: P_Acc ~ 1 + Pronoun + (1 | SubjID)
 
-    ## Currently evaluating LRT for: 1 | Name, Pronoun | SubjID
-
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + (1 | SubjID) + (1 |
-    ##     Name)
+    ## Currently evaluating LRT for: Pronoun | SubjID, 1 | Name
 
     ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + (1 + Pronoun |
     ##     SubjID)
 
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + (1 | SubjID) + (1 |
+    ##     Name)
+
     ## Updating formula: P_Acc ~ 1 + Pronoun + (1 | SubjID) + (1 | Name)
 
-    ## Currently evaluating LRT for: Pronoun | Name, Pronoun | SubjID
+    ## Currently evaluating LRT for: Pronoun | SubjID, Pronoun | Name
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + (1 + Pronoun |
+    ##     SubjID) + (1 | Name)
 
     ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + (1 | SubjID) + (1 +
     ##     Pronoun | Name)
 
     ## boundary (singular) fit: see help('isSingular')
 
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + (1 + Pronoun |
-    ##     SubjID) + (1 | Name)
-
     ## Ending the ordering procedure due to having reached the maximal
     ##     feasible model - all higher models failed to converge. The types of
-    ##     convergence failure are: Singular fit lme4 reports not having
-    ##     converged (-1)
+    ##     convergence failure are: lme4 reports not having converged (-1)
+    ##     Singular fit
 
 ``` r
-summary(model_p)
+summary(exp1b_m_prod)
 ```
 
     ## Generalized linear mixed model fit by maximum likelihood (Laplace
     ##   Approximation) (p-values based on Wald z-scores) [glmerMod]
     ##  Family: binomial  ( logit )
     ## Formula: P_Acc ~ 1 + Pronoun + (1 | SubjID) + (1 | Name)
-    ##    Data: p
+    ##    Data: exp1b_d
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
     ##   1207.4   1232.9   -598.7   1197.4     1207 
@@ -379,70 +442,113 @@ summary(model_p)
 Convert to odds:
 
 ``` r
-exp(1.10833) #intercept (mean)
+# intercept (mean)
+exp1b_m_prod@model %>% get_intercept() %>% exp()
 ```
 
-    ## [1] 3.029295
+    ## [1] 3.0293
 
 ``` r
-exp(2.476427) #they/them vs. he/him + she/her
+# they/them vs. he/him + she/her
+exp1b_m_prod@model %>%
+  get_parameters() %>%
+  filter(Parameter == "Pronounthey vs he+she") %>%
+  pull(Estimate) %>%
+  exp()
 ```
 
-    ## [1] 11.89867
+    ## [1] 11.89868
 
--   The intercept is significant (p\<.001), such that participants are
-    3.02 times more likely to answer correctly than incorrectly across
-    all pronoun types.
+- The intercept is significant (p\<.001), such that participants are
+  3.03 times more likely to answer correctly than incorrectly across all
+  pronoun types.
 
--   The contrast between they/them and he/him + she/her is significant
-    (p\<.001), such that participants are 11.83 times more likely to get
-    he/him and she/her right than they/them.
+- The contrast between they/them and he/him + she/her is significant
+  (p\<.001), such that participants are 11.90 times more likely to get
+  he/him and she/her right than they/them.
 
--   The contrast between he/him and she/her is not significant.
+- The contrast between he/him and she/her is not significant.
 
 # Memory Predicting Production
 
 ### Descriptive Stats
+
+Accuracy for producing they/them is lower than accuracy for remembering
+they/them. But for he/him and she/her, production accuracy is higher.
+
+``` r
+exp1b_d %>%
+  pivot_longer(
+    cols      = c(M_Acc, P_Acc),
+    names_to  = "Task",
+    values_to = "Acc"
+  ) %>%
+  group_by(Pronoun, Task) %>%
+  summarise(mean = mean(Acc) %>% round(2))
+```
+
+    ## # A tibble: 6 × 3
+    ## # Groups:   Pronoun [3]
+    ##   Pronoun   Task   mean
+    ##   <fct>     <chr> <dbl>
+    ## 1 he/him    M_Acc  0.79
+    ## 2 he/him    P_Acc  0.84
+    ## 3 she/her   M_Acc  0.8 
+    ## 4 she/her   P_Acc  0.84
+    ## 5 they/them M_Acc  0.48
+    ## 6 they/them P_Acc  0.39
 
 Combining the two measures, there are 4 possible patterns: getting both
 right, getting both wrong, getting just memory right, and getting just
 production right.
 
 ``` r
-mp_acc <- mp %>% 
-          mutate(BothRight=ifelse(M_Acc==1 & P_Acc==1, 1, 0)) %>%
-          mutate(BothWrong=ifelse(M_Acc==0 & P_Acc==0, 1, 0)) %>%
-          mutate(MemOnly=ifelse(M_Acc==1 & P_Acc==0, 1, 0)) %>%
-          mutate(ProdOnly=ifelse(M_Acc==0 & P_Acc==1, 1, 0)) %>%
-          pivot_longer(cols=c(BothRight, BothWrong, MemOnly, ProdOnly),
-                       names_to="Combined_Accuracy") %>%
-          group_by(Pronoun, Combined_Accuracy) %>%
-          summarise(m=mean(value))
+exp1b_d %<>% mutate(
+  Combined_Accuracy = case_when(
+    M_Acc == 1 & P_Acc == 1 ~ "Both right",
+    M_Acc == 0 & P_Acc == 0 ~ "Both wrong",
+    M_Acc == 1 & P_Acc == 0 ~ "Memory only",
+    M_Acc == 0 & P_Acc == 1 ~ "Production only"
+  )
+)
+
+exp1b_d %>%
+  group_by(Pronoun, Combined_Accuracy) %>%
+  summarise(n = n())
 ```
 
-    ## `summarise()` has grouped output by 'Pronoun'. You can override using the
-    ## `.groups` argument.
+    ## # A tibble: 12 × 3
+    ## # Groups:   Pronoun [3]
+    ##    Pronoun   Combined_Accuracy     n
+    ##    <fct>     <chr>             <int>
+    ##  1 he/him    Both right          278
+    ##  2 he/him    Both wrong           24
+    ##  3 he/him    Memory only          40
+    ##  4 he/him    Production only      62
+    ##  5 she/her   Both right          286
+    ##  6 she/her   Both wrong           25
+    ##  7 she/her   Memory only          38
+    ##  8 she/her   Production only      55
+    ##  9 they/them Both right          125
+    ## 10 they/them Both wrong          176
+    ## 11 they/them Memory only          70
+    ## 12 they/them Production only      33
+
+Production accuracy for they/them when memory was correct vs incorrect.
 
 ``` r
-mp_acc
+exp1b_d %>%
+  filter(Pronoun == "they/them") %>%
+  group_by(M_Acc, Pronoun) %>%
+  summarise(P_Acc = mean(P_Acc) %>% round(2))
 ```
 
-    ## # A tibble: 12 x 3
-    ## # Groups:   Pronoun [3]
-    ##    Pronoun   Combined_Accuracy      m
-    ##    <fct>     <chr>              <dbl>
-    ##  1 he/him    BothRight         0.688 
-    ##  2 he/him    BothWrong         0.0594
-    ##  3 he/him    MemOnly           0.0990
-    ##  4 he/him    ProdOnly          0.153 
-    ##  5 she/her   BothRight         0.708 
-    ##  6 she/her   BothWrong         0.0619
-    ##  7 she/her   MemOnly           0.0941
-    ##  8 she/her   ProdOnly          0.136 
-    ##  9 they/them BothRight         0.309 
-    ## 10 they/them BothWrong         0.436 
-    ## 11 they/them MemOnly           0.173 
-    ## 12 they/them ProdOnly          0.0817
+    ## # A tibble: 2 × 3
+    ## # Groups:   M_Acc [2]
+    ##   M_Acc Pronoun   P_Acc
+    ##   <int> <fct>     <dbl>
+    ## 1     0 they/them  0.16
+    ## 2     1 they/them  0.64
 
 ### Model
 
@@ -1420,24 +1526,13 @@ summary(exp1b_m_pet_heshe)
 - Like in main experiment, significant (p \< .001) main effect of
   Question Type (M_Type) means that pronoun questions were more accurate
   than pet questions for he/him + she/her characters
-``` r
-exp(1.49113)  #memory accuracy
-```
-
-    ## [1] 4.442112
 
 ``` r
-exp(-1.15555) #they/them vs. he/him + she/her * memory accuracy
 ```
 
-    ## [1] 0.3148843
 
--   The effect of memory accuracy is significant (p\<.001), such that
-    participants are 4.44x more likely to get the production right if
-    they got the memory right.
+``` r
+```
 
--   Significant interaction between pronoun type (they/them vs. he/him +
-    she/her) and memory accuracy (p\<.05) (odds 0.31). The relative
-    difficulty of they/them was attenuated when the participant had
-    correctly remembered the character’s pronoun during the memory phase
-    of the task.
+
+

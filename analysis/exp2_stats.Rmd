@@ -1,7 +1,7 @@
 ---
-title: 'Improving memory for and production of singular <i>they</i> pronouns: Experiment 2'
+title: "Improving memory for and production of singular <i>they</i> pronouns: Experiment 2"
 author: "Bethany Gardner"
-date: "03/24/2022"
+date: "03/24/2022, 04/03/2023"
 output: 
   pdf_document:
     toc: true
@@ -14,260 +14,324 @@ editor_options:
     wrap: 72
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-library(tidyr)
-library(dplyr)
-options(dplyr.summarise.inform = FALSE)
+```{r}
+#| label: exp2-setup
+#| include: false
+
+library(tidyverse)
 library(magrittr)
+library(broom.mixed)
 library(lmerTest)
 library(buildmer)
-library(broom.mixed)
+library(sjmisc)
+
+options(dplyr.summarise.inform = FALSE)
 ```
 
 # Load data
 
-Read data, preprocessed from PCIbex output. See data/exp2_data_readme
-for more details.
+Read data, preprocessed from PCIbex output. See data/exp2_data_readme for more details.
 
 ```{r}
-d_all <- read.csv("../data/exp2_data.csv", stringsAsFactors=TRUE) %>%
-  rename("Biographies"="Story") #rename to match labeling in paper
+#| label: exp2-load
 
-d_all$Participant <- as.factor(d_all$Participant)
-d_all$PSA <- as.factor(d_all$PSA)
-d_all$Biographies <- as.factor(d_all$Biographies)
-d_all$X <- NULL
+exp2_d_all <- read.csv("data/exp2_data.csv", stringsAsFactors = TRUE) %>%
+  rename("Biographies" = "Story") # rename to match labeling in paper
 
-str(d_all)
+exp2_d_all$Participant %<>% as.factor()
+exp2_d_all$PSA %<>% as.factor()
+exp2_d_all$Biographies %<>% as.factor()
+exp2_d_all$X <- NULL
+
+str(exp2_d_all)
 ```
 
-Set up contrast coding for Pronoun Type. The first contrast compares
-they to he+she. The second contrast compares he to she.
+Set up contrast coding for Pronoun Type. The first contrast compares *they* to *he*+*she*. The second contrast compares *he* to *she*.
 
 ```{r}
-contrasts(d_all$Pronoun)=cbind("_T_HS"=c(.33,.33,-.66), 
-                               "_H_S"=c(-.5,.5, 0))
-contrasts(d_all$Pronoun)
+#| label: exp2-contrasts-1
+
+contrasts(exp2_d_all$Pronoun) <- cbind(
+  "_T_HS" = c(.33, .33, -.66),
+  "_H_S"  = c(-.5, .5, 0)
+)
+contrasts(exp2_d_all$Pronoun)
 ```
 
-Set up contrast coding for PSA and Biographies conditions. .5 are the
-conditions related to singular they (gendered language PSA, they/them
-biographies); -.5 are the unrelated conditions (unrelated PSA, he/him
-and she/her biographies).
+Set up contrast coding for PSA and Biographies conditions. .5 are the conditions related to singular they (gendered language PSA, they/them biographies); -.5 are the unrelated conditions (unrelated PSA, he/him and she/her biographies).
 
 ```{r}
-contrasts(d_all$PSA)=cbind("_GenLang"=c(-.5,.5))
-contrasts(d_all$PSA)
+#| label: exp2-contrasts-2
 
-contrasts(d_all$Biographies)=cbind("_They"=c(-.5,.5))
-contrasts(d_all$Biographies)
+# check labels
+exp2_d_all %>% count(Condition, PSA, Biographies)
+
+contrasts(exp2_d_all$PSA) <- cbind("_GenLang" = c(-.5, .5))
+contrasts(exp2_d_all$PSA)
+
+contrasts(exp2_d_all$Biographies) <- cbind("_They" = c(-.5, .5))
+contrasts(exp2_d_all$Biographies)
 ```
 
 Remove pet and job rows, and the columns that aren't used in the models.
 
 ```{r}
-d <- d_all %>% filter (M_Type=="pronoun") %>%
-  select(Participant, Condition, PSA, Biographies, Name, Pronoun, 
-         M_Acc, M_Response, P_Acc, P_Response)
-```
+#| label: exp2-data-subset
 
-By-participant mean accuracy for memory and production tasks.
-
-```{r}
-d_subj <- d %>% group_by(PSA, Biographies, Participant, Pronoun) %>%
-          summarize(M_Mean=mean(M_Acc), P_Mean=mean(P_Acc))
-```
-
-By-participant mean accuracy for production, split by memory accuracy.
-
-```{r}
-d_acc <- d %>% group_by(PSA, Biographies, Participant, Pronoun, M_Acc) %>%
-          summarize(P_Mean=mean(P_Acc))
-```
-
-If each participant selected/produced they/them at least once.
-
-```{r}
-d_they <- d %>% 
-  mutate(M_IsThey=ifelse(M_Response=="they/them", 1, 0)) %>%
-  mutate(P_IsThey=ifelse(P_Response=="they/them", 1, 0)) %>%
-  group_by(Participant, Condition, PSA, Biographies) %>%
-  summarize(M_Count=sum(M_IsThey),
-            P_Count=sum(P_IsThey)) %>%
-  mutate(M_UseThey=ifelse(M_Count!=0, 1, 0)) %>%
-  mutate(P_UseThey=ifelse(P_Count!=0, 1, 0))
+exp2_d <- exp2_d_all %>%
+  filter(M_Type == "pronoun") %>%
+  select(
+    Participant, Condition, PSA, Biographies, Name, Pronoun,
+    M_Acc, M_Response, P_Acc, P_Response
+  )
 ```
 
 # Memory
 
-### Descriptive Stats
+## Descriptive Stats
 
 Mean accuracy for all three memory question types.
 
 ```{r}
-d_all %>% group_by(M_Type) %>%
-          summarise(acc=mean(M_Acc))
+#| label: exp2-memory-all-means
+
+exp2_d_all %>%
+  group_by(M_Type) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
 ```
 
-Mean accuracy, split by Pronoun Type, PSA, and Biographies conditions.
-[Both = gendered language PSA + they biographies; PSA = gendered
-language PSA + he/she biographies; Story = unrelated PSA + they
-biographies; Neither = unrelated PSA + he/she biographies.]
+Mean accuracy, split by Pronoun Type, PSA, and Biographies conditions. [Both = gendered language PSA + *they* biographies; PSA = gendered language PSA + *he*/she biographies; Story = unrelated PSA + they biographies; Neither = unrelated PSA + he/she biographies.]
 
 ```{r}
-d %>% group_by(Pronoun, Condition) %>%
-      summarise(acc=mean(M_Acc))    
+#| label: exp2-memory-condition-means
+
+exp2_d %>%
+  mutate(Pronoun_Group = ifelse(Pronoun == "they/them", "They", "He + She")) %>%
+  group_by(Pronoun_Group, Condition) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  ) %>%
+  arrange(Pronoun_Group, mean)
 ```
 
 90-95% of participants selected they/them at least once.
 
 ```{r}
-d_they %>% group_by(Condition) %>% 
-  summarize(Select_They=sum(M_UseThey)) %>%
-  mutate(n=80) %>%
-  mutate(prop=Select_They/n)
+#| label: exp2-memory-usedThey
+
+exp2_d %>%
+  filter(M_Response == "they/them") %>%
+  group_by(Condition) %>%
+  summarise(
+    n    = n_distinct(Participant),
+    prop = n / 80
+  )
 ```
 
-### Model
+## Model
 
-Full model has interactions between Pronoun (2 contrasts), PSA, and
-Biographies; random intercepts and slopes by participant and item.
-buildmer finds the maximal model that will converge (but doesn't then go
-backward to remove non-significant terms, the default setting). The
-final model includes all fixed effects/interactions and random
-intercepts by name.
+Full model has interactions between Pronoun (2 contrasts), PSA, and Biographies; random intercepts and slopes by participant and item. buildmer finds the maximal model that will converge (but doesn't then go backward to remove non-significant terms, the default setting). The final model includes all fixed effects/interactions and random intercepts by name.
 
 ```{r}
-model_m_full <- M_Acc ~ Pronoun * PSA * Biographies + 
-                (Pronoun|Participant) + (Pronoun|Name)
+#| label: exp2-memory-model
+#| cache: true
 
-model_m <- buildmer(model_m_full, d, 
-           family="binomial", direction=c("order"))
+exp2_m_memory <- buildmer(
+  formula = M_Acc ~ Pronoun * PSA * Biographies +
+    (Pronoun | Participant) + (Pronoun | Name),
+  data = exp2_d, family = binomial,
+  buildmerControl(direction = "order")
+)
 
-summary(model_m)
+summary(exp2_m_memory)
 ```
 
 # Production
 
-### Descriptive Stats
+## Descriptive Stats
 
-Mean accuracy, split by Pronoun Type, PSA, and Biographies conditions.
-[Both = gendered language PSA + they biographies; PSA = gendered
-language PSA + he/she biographies; Story = unrelated PSA + they
-biographies; Neither = unrelated PSA + he/she biographies.]
+Mean accuracy, split by Pronoun Type, PSA, and Biographies conditions. [Both = gendered language PSA + *they* biographies; PSA = gendered language PSA + *he/she* biographies; Story = unrelated PSA + *they* biographies; Neither = unrelated PSA + *he/she* biographies.]
 
 ```{r}
-d %>% group_by(Pronoun, Condition) %>%
-      summarise(m=mean(P_Acc))    
+#| label: exp2-production-means
+
+exp2_d %>%
+  mutate(Pronoun_Group = ifelse(Pronoun == "they/them", "They", "He + She")) %>%
+  group_by(Pronoun_Group, Condition) %>%
+  summarise(
+    mean = mean(P_Acc) %>% round(2),
+    sd   = sd(P_Acc)   %>% round(2)
+  ) %>%
+  arrange(Pronoun_Group, mean)
 ```
 
-### Model
+## Model
 
-Same model specifications as before. The maximal model contains all
-fixed effects/interactions and by-item random intercepts.
+Same model specifications as before. The maximal model contains all fixed effects/interactions and by-item random intercepts.
 
 ```{r}
-model_p_full <- P_Acc ~ Pronoun * PSA * Biographies + 
-                (Pronoun|Participant) + (Pronoun|Name)
+#| label: exp2-production-model
+#| cache: true
 
-model_p <- buildmer(model_p_full, d, 
-           family="binomial", direction=c("order"))
+exp2_m_prod <- buildmer(
+  formula = P_Acc ~ Pronoun * PSA * Biographies +
+    (Pronoun | Participant) + (Pronoun | Name),
+  data = exp2_d, family = binomial,
+  buildmerControl(direction = "order")
+)
 
-summary(model_p)
+summary(exp2_m_prod)
 ```
 
-### Three-Way Interaction
+## Three-Way Interaction
 
-The main model has Helmert coding for Pronoun and Effects coding (.5,
--.5) for PSA and Biographies. This means Pronoun (T vs HS) \* PSA \*
-Biographies is testing the interaction between Pronoun and PSA across
-both Biographies conditions.
+The main model has Helmert coding for Pronoun and Effects coding (.5, -.5) for PSA and Biographies. This means Pronoun (T vs HS) \* PSA \* Biographies is testing the interaction between Pronoun and PSA across both Biographies conditions.
 
-Dummy coding Biographies with they/them biographies as 1 and he/she
-biographies as 0 tests the interaction between Pronoun and PSA for just
-the he/she Biographies:
+Dummy coding Biographies with *they* biographies as 1 and *he/she* biographies as 0 tests the interaction between Pronoun and PSA for just the *he/she* Biographies:
 
 ```{r}
+#| label: exp2-production-interaction-HS0
+#| cache: true
 
-d %<>% mutate(BioDummy_T=Biographies)
-contrasts(d$BioDummy_T)=cbind("_They1"=c(0,1))
+exp2_d %<>% mutate(Biographies_HS0 = Biographies)
+contrasts(exp2_d$Biographies_HS0) <- cbind("_HS0_T1" = c(0, 1))
 
-model_p_dummyT <- glmer(P_Acc ~ Pronoun * PSA * BioDummy_T + (1|Name),
-                  data=d, family="binomial")
+exp2_m_prod_HS0 <- glmer(
+  P_Acc ~ Pronoun * PSA * Biographies_HS0 + (1 | Name),
+  data = exp2_d, family = binomial
+)
 
-summary(model_p_dummyT)
-
+summary(exp2_m_prod_HS0)
 ```
 
-Conversely, dummy coding Biographies with he/she biographies as 1 and
-they biographies as 0 tests the interaction between Pronoun and PSA for
-just the they Biographies.
+Conversely, dummy coding Biographies with *he/she* biographies as 1 and *they* biographies as 0 tests the interaction between Pronoun and PSA for just the *they* Biographies.
 
 ```{r}
-d %<>% mutate(BioDummy_HS=Biographies)
-contrasts(d$BioDummy_HS)=cbind("_HeShe"=c(1,0))
+#| label: exp2-production-interaction-T0
+#| cache: true
 
-model_p_dummyHS <- glmer(P_Acc ~ Pronoun * PSA * BioDummy_HS + (1|Name),
-                        data=d, family="binomial")
-summary(model_p_dummyHS)
+exp2_d %<>% mutate(Biographies_T0 = Biographies)
+contrasts(exp2_d$Biographies_T0) <- cbind("_T0_HS1" = c(1, 0))
+
+exp2_m_prod_T0 <- glmer(
+  P_Acc ~ Pronoun * PSA * Biographies_T0 + (1 | Name),
+  data = exp2_d, family = binomial
+)
+
+summary(exp2_m_prod_T0)
 ```
 
 The three models to compare:
 
 ```{r}
+#| label: exp2-production-interaction-results
 
-interaction_1 <- tidy(model_p@model) %>% 
-  select(term, estimate, p.value) %>%
-  filter(term=="Pronoun_T_HS" | term=="PSA_GenLang" |
-           term=="Pronoun_T_HS:PSA_GenLang") %>%
-  rename("AcrossBio_Est"="estimate", "AcrossBio_p"="p.value")
+exp2_r_prod_interaction <- bind_rows(.id = "model",
+  "Across_Bio" = exp2_m_prod@model %>% tidy(),
+  "HeShe_Bio"  = exp2_m_prod_HS0   %>% tidy(),
+  "They_Bio"   = exp2_m_prod_T0    %>% tidy()
+  ) %>%
+  select(model, term, estimate, p.value) %>%
+  filter(
+    term == "Pronoun_T_HS" |
+    term == "PSA_GenLang" |
+    term == "Pronoun_T_HS:PSA_GenLang"
+  ) %>%
+  arrange(term, model)
 
-interaction_2 <- tidy(model_p_dummyT) %>% 
-  select(term, estimate, p.value) %>%
-  filter(term=="Pronoun_T_HS" | term=="PSA_GenLang" |
-           term=="Pronoun_T_HS:PSA_GenLang") %>%
-  rename("HeSheBio_Est"="estimate", "HeSheBio_p"="p.value") %>%
-  left_join(interaction_1)
-
-interaction_3 <- tidy(model_p_dummyHS) %>% 
-  select(term, estimate, p.value) %>%
-  filter(term=="Pronoun_T_HS" | term=="PSA_GenLang" |
-           term=="Pronoun_T_HS:PSA_GenLang") %>%
-  rename("TheyBio_Est"="estimate", "TheyBio_p"="p.value") %>%
-  left_join(interaction_2)
-
-interaction_3
-
+exp2_r_prod_interaction
 ```
 
-The estimate for the PSA\*Pronoun interaction is -2.34 for the he/she
-biographies and -1.47 for the they biographies, which means that the
-pronoun PSA reduced the relative difficulty of they/them more when
-paired with the he/she biographies than with they biographies.
-Connecting to the plot, the PSA-Neither difference is larger than
-Both-Story difference.
+The estimate for the PSA\*Pronoun interaction is -2.34 for the *he/she* biographies and -1.47 for the *they* biographies, which means that the pronoun PSA reduced the relative difficulty of they/them more when paired with the *he/she* biographies than with *they* biographies. Connecting to the plot, the PSA-Neither difference is larger than Both-Story difference.
 
-### Producing they/them at least once
+## Producing they/them at least once
 
 ```{r}
-d %>% filter(P_Response=="they/them") %>%
-  group_by(Condition) %>% 
-  summarize(they=n_distinct(Participant)) %>%
-  mutate(n=80) %>%
-  mutate(prop=they/n)
+#| label: exp2-produced-they-means
+
+exp2_d %>%
+  filter(P_Response == "they/them") %>%
+  group_by(Condition) %>%
+  summarise(
+    n    = n_distinct(Participant),
+    prop = n / 80
+  )
 ```
 
-Model with whether each participant produced they/them at least once as
-the outcome variable. Higher with the gendered language PSA, no effect
-of Biographies, vaguely trending interaction.
+Model with whether each participant produced they/them at least once as the outcome variable. Higher with the gendered language PSA, no effect of Biographies, vaguely trending interaction.
 
 ```{r}
-model_p_they <- glm(P_UseThey ~ PSA * Biographies, 
-                d_they, family="binomial")
-summary(model_p_they)
+#| label: exp2-produced-they-model
+
+exp2_d_they <- exp2_d %>%
+  mutate(
+    M_IsThey = ifelse(M_Response == "they/them", 1, 0),
+    P_IsThey = ifelse(P_Response == "they/them", 1, 0)
+  ) %>%
+  group_by(Participant, Condition, PSA, Biographies) %>%
+  summarise(
+    M_Count = sum(M_IsThey),
+    P_Count = sum(P_IsThey)
+  ) %>%
+  mutate(
+    M_UseThey = ifelse(M_Count != 0, 1, 0),
+    P_UseThey = ifelse(P_Count != 0, 1, 0)
+  )
+
+exp2_m_prod_useThey <- glm(
+  formula = P_UseThey ~ PSA * Biographies,
+  data = exp2_d_they, family = binomial
+)
+
+summary(exp2_m_prod_useThey)
 ```
 
+# Memory Predicting Production
+
+## Descriptive Stats
+
+```{r}
+#| label: exp2-memory-production-means
+
+exp2_d %>%
+  group_by(Pronoun, Condition, M_Acc) %>%
+  summarise(m = mean(P_Acc))
+```
+
+Combining the two measures, there are 4 possible patterns: getting both right, getting both wrong, getting just memory right, and getting just production right.
+
+```{r}
+#| label: exp2-memory-production-dist
+
+exp2_r_dist <- exp2_d %>%
+  mutate(
+    Combined_Accuracy = case_when(
+      M_Acc == 1 & P_Acc == 1 ~ "Both right",
+      M_Acc == 0 & P_Acc == 0 ~ "Both wrong",
+      M_Acc == 1 & P_Acc == 0 ~ "Memory only",
+      M_Acc == 0 & P_Acc == 1 ~ "Production only"
+    )
+  ) %>%
+  group_by(Pronoun, Condition, Combined_Accuracy) %>%
+  summarise(n = n())
+
+exp2_r_dist
+```
+
+Production accuracy for they/them when memory was correct vs incorrect.
+
+```{r}
+#| label: exp2-memory-production-split
+
+exp2_d %>%
+  filter(Pronoun == "they/them") %>%
+  group_by(Condition, M_Acc) %>%
+  summarise(P_Acc = mean(P_Acc))
+```
 
 ## Model
 
@@ -301,8 +365,6 @@ summary(exp2_m_mp)
 Compare pet accuracy to pronoun accuracy. Pronoun (renamed to Character Pronoun here for clarity) stays contrast coded as before and Question Type (M_Type = pet or pronoun) is mean-center effects coded, comparing pet questions to pronoun questions.
 
 ```{r}
-d %>% group_by(Pronoun, Condition, M_Acc) %>%
-      summarise(m=mean(P_Acc))    
 #| label: exp2-compare-pets-means
 
 # mean and sd for pets
@@ -333,9 +395,6 @@ contrasts(exp2_d_pronounsPets$M_Type) <- cbind(
 contrasts(exp2_d_pronounsPets$M_Type)
 ```
 
-Combining the two measures, there are 4 possible patterns: getting both
-right, getting both wrong, getting just memory right, and getting just
-production right.
 ```{r}
 #| label: exp2-compare-pets-model
 #| cache: true
@@ -354,16 +413,6 @@ summary(exp2_m_pet)
 ```
 
 ```{r}
-mp_acc <- d %>% 
-          mutate(BothRight=ifelse(M_Acc==1 & P_Acc==1, 1, 0)) %>%
-          mutate(BothWrong=ifelse(M_Acc==0 & P_Acc==0, 1, 0)) %>%
-          mutate(MemOnly=ifelse(M_Acc==1 & P_Acc==0, 1, 0)) %>%
-          mutate(ProdOnly=ifelse(M_Acc==0 & P_Acc==1, 1, 0)) %>%
-          pivot_longer(cols=c(BothRight, BothWrong, MemOnly, ProdOnly),
-                       names_to="Combined_Accuracy") %>%
-          group_by(Pronoun, Combined_Accuracy) %>%
-          summarise(m=mean(value))
-mp_acc
 #| label: exp2-compare-pets-model-they0
 #| cache: true
 

@@ -2,21 +2,30 @@ Improving memory for and production of singular <i>they</i> pronouns:
 Experiment 2
 ================
 Bethany Gardner
-03/24/2022
+03/24/2022, 04/03/2023
 
--   [Load data](#load-data)
--   [Memory](#memory)
-    -   [Descriptive Stats](#descriptive-stats)
-    -   [Model](#model)
--   [Production](#production)
-    -   [Descriptive Stats](#descriptive-stats-1)
-    -   [Model](#model-1)
-    -   [Three-Way Interaction](#three-way-interaction)
-    -   [Producing they/them at least
-        once](#producing-theythem-at-least-once)
--   [Memory Predicting Production](#memory-predicting-production)
-    -   [Descriptive Stats](#descriptive-stats-2)
-    -   [Model](#model-2)
+- <a href="#load-data" id="toc-load-data">Load data</a>
+- <a href="#memory" id="toc-memory">Memory</a>
+  - <a href="#descriptive-stats" id="toc-descriptive-stats">Descriptive
+    Stats</a>
+  - <a href="#model" id="toc-model">Model</a>
+- <a href="#production" id="toc-production">Production</a>
+  - <a href="#descriptive-stats-1" id="toc-descriptive-stats-1">Descriptive
+    Stats</a>
+  - <a href="#model-1" id="toc-model-1">Model</a>
+  - <a href="#three-way-interaction"
+    id="toc-three-way-interaction">Three-Way Interaction</a>
+  - <a href="#producing-theythem-at-least-once"
+    id="toc-producing-theythem-at-least-once">Producing they/them at least
+    once</a>
+- <a href="#memory-predicting-production"
+  id="toc-memory-predicting-production">Memory Predicting Production</a>
+  - <a href="#descriptive-stats-2" id="toc-descriptive-stats-2">Descriptive
+    Stats</a>
+  - <a href="#model-2" id="toc-model-2">Model</a>
+- <a href="#compare-pet-questions" id="toc-compare-pet-questions">Compare
+  Pet Questions</a>
+- <a href="#compare-to-exp1" id="toc-compare-to-exp1">Compare to Exp1</a>
 
 # Load data
 
@@ -24,15 +33,15 @@ Read data, preprocessed from PCIbex output. See data/exp2_data_readme
 for more details.
 
 ``` r
-d_all <- read.csv("../data/exp2_data.csv", stringsAsFactors=TRUE) %>%
-  rename("Biographies"="Story") #rename to match labeling in paper
+exp2_d_all <- read.csv("data/exp2_data.csv", stringsAsFactors = TRUE) %>%
+  rename("Biographies" = "Story") # rename to match labeling in paper
 
-d_all$Participant <- as.factor(d_all$Participant)
-d_all$PSA <- as.factor(d_all$PSA)
-d_all$Biographies <- as.factor(d_all$Biographies)
-d_all$X <- NULL
+exp2_d_all$Participant %<>% as.factor()
+exp2_d_all$PSA %<>% as.factor()
+exp2_d_all$Biographies %<>% as.factor()
+exp2_d_all$X <- NULL
 
-str(d_all)
+str(exp2_d_all)
 ```
 
     ## 'data.frame':    11520 obs. of  18 variables:
@@ -56,12 +65,14 @@ str(d_all)
     ##  $ P_Acc      : int  NA 0 NA NA 1 NA NA NA NA NA ...
 
 Set up contrast coding for Pronoun Type. The first contrast compares
-they to he+she. The second contrast compares he to she.
+*they* to *he*+*she*. The second contrast compares *he* to *she*.
 
 ``` r
-contrasts(d_all$Pronoun)=cbind("_T_HS"=c(.33,.33,-.66), 
-                               "_H_S"=c(-.5,.5, 0))
-contrasts(d_all$Pronoun)
+contrasts(exp2_d_all$Pronoun) <- cbind(
+  "_T_HS" = c(.33, .33, -.66),
+  "_H_S"  = c(-.5, .5, 0)
+)
+contrasts(exp2_d_all$Pronoun)
 ```
 
     ##           _T_HS _H_S
@@ -75,8 +86,19 @@ biographies); -.5 are the unrelated conditions (unrelated PSA, he/him
 and she/her biographies).
 
 ``` r
-contrasts(d_all$PSA)=cbind("_GenLang"=c(-.5,.5))
-contrasts(d_all$PSA)
+# check labels
+exp2_d_all %>% count(Condition, PSA, Biographies)
+```
+
+    ##   Condition PSA Biographies    n
+    ## 1      both   1           1 2880
+    ## 2   neither   0           0 2880
+    ## 3       psa   1           0 2880
+    ## 4     story   0           1 2880
+
+``` r
+contrasts(exp2_d_all$PSA) <- cbind("_GenLang" = c(-.5, .5))
+contrasts(exp2_d_all$PSA)
 ```
 
     ##   _GenLang
@@ -84,8 +106,8 @@ contrasts(d_all$PSA)
     ## 1      0.5
 
 ``` r
-contrasts(d_all$Biographies)=cbind("_They"=c(-.5,.5))
-contrasts(d_all$Biographies)
+contrasts(exp2_d_all$Biographies) <- cbind("_They" = c(-.5, .5))
+contrasts(exp2_d_all$Biographies)
 ```
 
     ##   _They
@@ -95,101 +117,86 @@ contrasts(d_all$Biographies)
 Remove pet and job rows, and the columns that aren’t used in the models.
 
 ``` r
-d <- d_all %>% filter (M_Type=="pronoun") %>%
-  select(Participant, Condition, PSA, Biographies, Name, Pronoun, 
-         M_Acc, M_Response, P_Acc, P_Response)
-```
-
-By-participant mean accuracy for memory and production tasks.
-
-``` r
-d_subj <- d %>% group_by(PSA, Biographies, Participant, Pronoun) %>%
-          summarize(M_Mean=mean(M_Acc), P_Mean=mean(P_Acc))
-```
-
-By-participant mean accuracy for production, split by memory accuracy.
-
-``` r
-d_acc <- d %>% group_by(PSA, Biographies, Participant, Pronoun, M_Acc) %>%
-          summarize(P_Mean=mean(P_Acc))
-```
-
-If each participant selected/produced they/them at least once.
-
-``` r
-d_they <- d %>% 
-  mutate(M_IsThey=ifelse(M_Response=="they/them", 1, 0)) %>%
-  mutate(P_IsThey=ifelse(P_Response=="they/them", 1, 0)) %>%
-  group_by(Participant, Condition, PSA, Biographies) %>%
-  summarize(M_Count=sum(M_IsThey),
-            P_Count=sum(P_IsThey)) %>%
-  mutate(M_UseThey=ifelse(M_Count!=0, 1, 0)) %>%
-  mutate(P_UseThey=ifelse(P_Count!=0, 1, 0))
+exp2_d <- exp2_d_all %>%
+  filter(M_Type == "pronoun") %>%
+  select(
+    Participant, Condition, PSA, Biographies, Name, Pronoun,
+    M_Acc, M_Response, P_Acc, P_Response
+  )
 ```
 
 # Memory
 
-### Descriptive Stats
+## Descriptive Stats
 
 Mean accuracy for all three memory question types.
 
 ``` r
-d_all %>% group_by(M_Type) %>%
-          summarise(acc=mean(M_Acc))
+exp2_d_all %>%
+  group_by(M_Type) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  )
 ```
 
-    ## # A tibble: 3 x 2
-    ##   M_Type    acc
-    ##   <fct>   <dbl>
-    ## 1 job     0.365
-    ## 2 pet     0.540
-    ## 3 pronoun 0.716
+    ## # A tibble: 3 × 3
+    ##   M_Type   mean    sd
+    ##   <fct>   <dbl> <dbl>
+    ## 1 job      0.37  0.48
+    ## 2 pet      0.54  0.5 
+    ## 3 pronoun  0.72  0.45
 
 Mean accuracy, split by Pronoun Type, PSA, and Biographies conditions.
-\[Both = gendered language PSA + they biographies; PSA = gendered
-language PSA + he/she biographies; Story = unrelated PSA + they
+\[Both = gendered language PSA + *they* biographies; PSA = gendered
+language PSA + *he*/she biographies; Story = unrelated PSA + they
 biographies; Neither = unrelated PSA + he/she biographies.\]
 
 ``` r
-d %>% group_by(Pronoun, Condition) %>%
-      summarise(acc=mean(M_Acc))    
+exp2_d %>%
+  mutate(Pronoun_Group = ifelse(Pronoun == "they/them", "They", "He + She")) %>%
+  group_by(Pronoun_Group, Condition) %>%
+  summarise(
+    mean = mean(M_Acc) %>% round(2),
+    sd   = sd(M_Acc)   %>% round(2)
+  ) %>%
+  arrange(Pronoun_Group, mean)
 ```
 
-    ## # A tibble: 12 x 3
-    ## # Groups:   Pronoun [3]
-    ##    Pronoun   Condition   acc
-    ##    <fct>     <fct>     <dbl>
-    ##  1 he/him    both      0.75 
-    ##  2 he/him    neither   0.819
-    ##  3 he/him    psa       0.8  
-    ##  4 he/him    story     0.784
-    ##  5 she/her   both      0.788
-    ##  6 she/her   neither   0.825
-    ##  7 she/her   psa       0.831
-    ##  8 she/her   story     0.806
-    ##  9 they/them both      0.572
-    ## 10 they/them neither   0.525
-    ## 11 they/them psa       0.588
-    ## 12 they/them story     0.506
+    ## # A tibble: 8 × 4
+    ## # Groups:   Pronoun_Group [2]
+    ##   Pronoun_Group Condition  mean    sd
+    ##   <chr>         <fct>     <dbl> <dbl>
+    ## 1 He + She      both       0.77  0.42
+    ## 2 He + She      story      0.8   0.4 
+    ## 3 He + She      neither    0.82  0.38
+    ## 4 He + She      psa        0.82  0.39
+    ## 5 They          story      0.51  0.5 
+    ## 6 They          neither    0.52  0.5 
+    ## 7 They          both       0.57  0.5 
+    ## 8 They          psa        0.59  0.49
 
 90-95% of participants selected they/them at least once.
 
 ``` r
-d_they %>% group_by(Condition) %>% 
-  summarize(Select_They=sum(M_UseThey)) %>%
-  mutate(n=80) %>%
-  mutate(prop=Select_They/n)
+exp2_d %>%
+  filter(M_Response == "they/them") %>%
+  group_by(Condition) %>%
+  summarise(
+    n    = n_distinct(Participant),
+    prop = n / 80
+  )
 ```
 
-    ## # A tibble: 4 x 4
-    ##   Condition Select_They     n  prop
-    ##   <fct>           <dbl> <dbl> <dbl>
-    ## 1 both               76    80 0.95 
-    ## 2 neither            72    80 0.9  
-    ## 3 psa                73    80 0.912
-    ## 4 story              74    80 0.925
+    ## # A tibble: 4 × 3
+    ##   Condition     n  prop
+    ##   <fct>     <int> <dbl>
+    ## 1 both         76 0.95 
+    ## 2 neither      72 0.9  
+    ## 3 psa          73 0.912
+    ## 4 story        74 0.925
 
-### Model
+## Model
 
 Full model has interactions between Pronoun (2 contrasts), PSA, and
 Biographies; random intercepts and slopes by participant and item.
@@ -199,51 +206,52 @@ final model includes all fixed effects/interactions and random
 intercepts by name.
 
 ``` r
-model_m_full <- M_Acc ~ Pronoun * PSA * Biographies + 
-                (Pronoun|Participant) + (Pronoun|Name)
-
-model_m <- buildmer(model_m_full, d, 
-           family="binomial", direction=c("order"))
+exp2_m_memory <- buildmer(
+  formula = M_Acc ~ Pronoun * PSA * Biographies +
+    (Pronoun | Participant) + (Pronoun | Name),
+  data = exp2_d, family = binomial,
+  buildmerControl(direction = "order")
+)
 ```
 
     ## Determining predictor order
 
     ## Fitting via glm: M_Acc ~ 1
 
-    ## Currently evaluating LRT for: Biographies, Pronoun, PSA
-
-    ## Fitting via glm: M_Acc ~ 1 + Biographies
+    ## Currently evaluating LRT for: Pronoun, PSA, Biographies
 
     ## Fitting via glm: M_Acc ~ 1 + Pronoun
 
     ## Fitting via glm: M_Acc ~ 1 + PSA
 
+    ## Fitting via glm: M_Acc ~ 1 + Biographies
+
     ## Updating formula: M_Acc ~ 1 + Pronoun
 
-    ## Currently evaluating LRT for: Biographies, PSA
-
-    ## Fitting via glm: M_Acc ~ 1 + Pronoun + Biographies
+    ## Currently evaluating LRT for: PSA, Biographies
 
     ## Fitting via glm: M_Acc ~ 1 + Pronoun + PSA
 
+    ## Fitting via glm: M_Acc ~ 1 + Pronoun + Biographies
+
     ## Updating formula: M_Acc ~ 1 + Pronoun + Biographies
 
-    ## Currently evaluating LRT for: Pronoun:Biographies, PSA
+    ## Currently evaluating LRT for: PSA, Pronoun:Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + Pronoun + Biographies + PSA
 
     ## Fitting via glm: M_Acc ~ 1 + Pronoun + Biographies +
     ##     Pronoun:Biographies
 
-    ## Fitting via glm: M_Acc ~ 1 + Pronoun + Biographies + PSA
-
     ## Updating formula: M_Acc ~ 1 + Pronoun + Biographies + PSA
 
-    ## Currently evaluating LRT for: Pronoun:Biographies, Pronoun:PSA,
+    ## Currently evaluating LRT for: Pronoun:PSA, Pronoun:Biographies,
     ##     PSA:Biographies
+
+    ## Fitting via glm: M_Acc ~ 1 + Pronoun + Biographies + PSA + Pronoun:PSA
 
     ## Fitting via glm: M_Acc ~ 1 + Pronoun + Biographies + PSA +
     ##     Pronoun:Biographies
-
-    ## Fitting via glm: M_Acc ~ 1 + Pronoun + Biographies + PSA + Pronoun:PSA
 
     ## Fitting via glm: M_Acc ~ 1 + Pronoun + Biographies + PSA +
     ##     PSA:Biographies
@@ -280,21 +288,25 @@ model_m <- buildmer(model_m_full, d,
     ## Fitting via glm: M_Acc ~ 1 + Pronoun + Biographies + PSA + Pronoun:PSA
     ##     + Pronoun:Biographies + Biographies:PSA + Pronoun:PSA:Biographies
 
-    ## Currently evaluating LRT for: 1 | Name, 1 | Participant
-
-    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Biographies + PSA +
-    ##     Pronoun:PSA + Pronoun:Biographies + Biographies:PSA +
-    ##     Pronoun:Biographies:PSA + (1 | Name)
+    ## Currently evaluating LRT for: 1 | Participant, 1 | Name
 
     ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Biographies + PSA +
     ##     Pronoun:PSA + Pronoun:Biographies + Biographies:PSA +
     ##     Pronoun:Biographies:PSA + (1 | Participant)
 
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Biographies + PSA +
+    ##     Pronoun:PSA + Pronoun:Biographies + Biographies:PSA +
+    ##     Pronoun:Biographies:PSA + (1 | Name)
+
     ## Updating formula: M_Acc ~ 1 + Pronoun + Biographies + PSA + Pronoun:PSA
     ##     + Pronoun:Biographies + Biographies:PSA + Pronoun:Biographies:PSA +
     ##     (1 | Name)
 
-    ## Currently evaluating LRT for: Pronoun | Name, 1 | Participant
+    ## Currently evaluating LRT for: 1 | Participant, Pronoun | Name
+
+    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Biographies + PSA +
+    ##     Pronoun:PSA + Pronoun:Biographies + Biographies:PSA +
+    ##     Pronoun:Biographies:PSA + (1 | Name) + (1 | Participant)
 
     ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Biographies + PSA +
     ##     Pronoun:PSA + Pronoun:Biographies + Biographies:PSA +
@@ -302,17 +314,13 @@ model_m <- buildmer(model_m_full, d,
 
     ## boundary (singular) fit: see help('isSingular')
 
-    ## Fitting via glmer, with ML: M_Acc ~ 1 + Pronoun + Biographies + PSA +
-    ##     Pronoun:PSA + Pronoun:Biographies + Biographies:PSA +
-    ##     Pronoun:Biographies:PSA + (1 | Name) + (1 | Participant)
-
     ## Ending the ordering procedure due to having reached the maximal
     ##     feasible model - all higher models failed to converge. The types of
-    ##     convergence failure are: Singular fit lme4 reports not having
-    ##     converged (-1)
+    ##     convergence failure are: lme4 reports not having converged (-1)
+    ##     Singular fit
 
 ``` r
-summary(model_m)
+summary(exp2_m_memory)
 ```
 
     ## Generalized linear mixed model fit by maximum likelihood (Laplace
@@ -321,7 +329,7 @@ summary(model_m)
     ## Formula: 
     ## M_Acc ~ 1 + Pronoun + Biographies + PSA + Pronoun:PSA + Pronoun:Biographies +  
     ##     Biographies:PSA + Pronoun:Biographies:PSA + (1 | Name)
-    ##    Data: d
+    ##    Data: exp2_d
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
     ##   4331.6   4412.9  -2152.8   4305.6     3827 
@@ -393,75 +401,78 @@ summary(model_m)
 
 # Production
 
-### Descriptive Stats
+## Descriptive Stats
 
 Mean accuracy, split by Pronoun Type, PSA, and Biographies conditions.
-\[Both = gendered language PSA + they biographies; PSA = gendered
-language PSA + he/she biographies; Story = unrelated PSA + they
-biographies; Neither = unrelated PSA + he/she biographies.\]
+\[Both = gendered language PSA + *they* biographies; PSA = gendered
+language PSA + *he/she* biographies; Story = unrelated PSA + *they*
+biographies; Neither = unrelated PSA + *he/she* biographies.\]
 
 ``` r
-d %>% group_by(Pronoun, Condition) %>%
-      summarise(m=mean(P_Acc))    
+exp2_d %>%
+  mutate(Pronoun_Group = ifelse(Pronoun == "they/them", "They", "He + She")) %>%
+  group_by(Pronoun_Group, Condition) %>%
+  summarise(
+    mean = mean(P_Acc) %>% round(2),
+    sd   = sd(P_Acc)   %>% round(2)
+  ) %>%
+  arrange(Pronoun_Group, mean)
 ```
 
-    ## # A tibble: 12 x 3
-    ## # Groups:   Pronoun [3]
-    ##    Pronoun   Condition     m
-    ##    <fct>     <fct>     <dbl>
-    ##  1 he/him    both      0.834
-    ##  2 he/him    neither   0.919
-    ##  3 he/him    psa       0.809
-    ##  4 he/him    story     0.875
-    ##  5 she/her   both      0.828
-    ##  6 she/her   neither   0.884
-    ##  7 she/her   psa       0.778
-    ##  8 she/her   story     0.828
-    ##  9 they/them both      0.328
-    ## 10 they/them neither   0.106
-    ## 11 they/them psa       0.334
-    ## 12 they/them story     0.119
+    ## # A tibble: 8 × 4
+    ## # Groups:   Pronoun_Group [2]
+    ##   Pronoun_Group Condition  mean    sd
+    ##   <chr>         <fct>     <dbl> <dbl>
+    ## 1 He + She      psa        0.79  0.4 
+    ## 2 He + She      both       0.83  0.37
+    ## 3 He + She      story      0.85  0.36
+    ## 4 He + She      neither    0.9   0.3 
+    ## 5 They          neither    0.11  0.31
+    ## 6 They          story      0.12  0.32
+    ## 7 They          both       0.33  0.47
+    ## 8 They          psa        0.33  0.47
 
-### Model
+## Model
 
 Same model specifications as before. The maximal model contains all
 fixed effects/interactions and by-item random intercepts.
 
 ``` r
-model_p_full <- P_Acc ~ Pronoun * PSA * Biographies + 
-                (Pronoun|Participant) + (Pronoun|Name)
-
-model_p <- buildmer(model_p_full, d, 
-           family="binomial", direction=c("order"))
+exp2_m_prod <- buildmer(
+  formula = P_Acc ~ Pronoun * PSA * Biographies +
+    (Pronoun | Participant) + (Pronoun | Name),
+  data = exp2_d, family = binomial,
+  buildmerControl(direction = "order")
+)
 ```
 
     ## Determining predictor order
 
     ## Fitting via glm: P_Acc ~ 1
 
-    ## Currently evaluating LRT for: Biographies, Pronoun, PSA
-
-    ## Fitting via glm: P_Acc ~ 1 + Biographies
+    ## Currently evaluating LRT for: Pronoun, PSA, Biographies
 
     ## Fitting via glm: P_Acc ~ 1 + Pronoun
 
     ## Fitting via glm: P_Acc ~ 1 + PSA
 
+    ## Fitting via glm: P_Acc ~ 1 + Biographies
+
     ## Updating formula: P_Acc ~ 1 + Pronoun
 
-    ## Currently evaluating LRT for: Biographies, PSA
-
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + Biographies
+    ## Currently evaluating LRT for: PSA, Biographies
 
     ## Fitting via glm: P_Acc ~ 1 + Pronoun + PSA
 
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + Biographies
+
     ## Updating formula: P_Acc ~ 1 + Pronoun + PSA
 
-    ## Currently evaluating LRT for: Biographies, Pronoun:PSA
-
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + PSA + Biographies
+    ## Currently evaluating LRT for: Pronoun:PSA, Biographies
 
     ## Fitting via glm: P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + PSA + Biographies
 
     ## Updating formula: P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA
 
@@ -501,21 +512,25 @@ model_p <- buildmer(model_p_full, d,
     ## Fitting via glm: P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA + Biographies
     ##     + PSA:Biographies + Pronoun:Biographies + Pronoun:PSA:Biographies
 
-    ## Currently evaluating LRT for: 1 | Name, 1 | Participant
-
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA +
-    ##     Biographies + PSA:Biographies + Pronoun:Biographies +
-    ##     Pronoun:PSA:Biographies + (1 | Name)
+    ## Currently evaluating LRT for: 1 | Participant, 1 | Name
 
     ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA +
     ##     Biographies + PSA:Biographies + Pronoun:Biographies +
     ##     Pronoun:PSA:Biographies + (1 | Participant)
 
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA +
+    ##     Biographies + PSA:Biographies + Pronoun:Biographies +
+    ##     Pronoun:PSA:Biographies + (1 | Name)
+
     ## Updating formula: P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA + Biographies
     ##     + PSA:Biographies + Pronoun:Biographies + Pronoun:PSA:Biographies +
     ##     (1 | Name)
 
-    ## Currently evaluating LRT for: Pronoun | Name, 1 | Participant
+    ## Currently evaluating LRT for: 1 | Participant, Pronoun | Name
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA +
+    ##     Biographies + PSA:Biographies + Pronoun:Biographies +
+    ##     Pronoun:PSA:Biographies + (1 | Name) + (1 | Participant)
 
     ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA +
     ##     Biographies + PSA:Biographies + Pronoun:Biographies +
@@ -523,17 +538,13 @@ model_p <- buildmer(model_p_full, d,
 
     ## boundary (singular) fit: see help('isSingular')
 
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA +
-    ##     Biographies + PSA:Biographies + Pronoun:Biographies +
-    ##     Pronoun:PSA:Biographies + (1 | Name) + (1 | Participant)
-
     ## Ending the ordering procedure due to having reached the maximal
     ##     feasible model - all higher models failed to converge. The types of
-    ##     convergence failure are: Singular fit lme4 reports not having
-    ##     converged (-1)
+    ##     convergence failure are: lme4 reports not having converged (-1)
+    ##     Singular fit
 
 ``` r
-summary(model_p)
+summary(exp2_m_prod)
 ```
 
     ## Generalized linear mixed model fit by maximum likelihood (Laplace
@@ -542,7 +553,7 @@ summary(model_p)
     ## Formula: 
     ## P_Acc ~ 1 + Pronoun + PSA + Pronoun:PSA + Biographies + PSA:Biographies +  
     ##     Pronoun:Biographies + Pronoun:PSA:Biographies + (1 | Name)
-    ##    Data: d
+    ##    Data: exp2_d
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
     ##   3464.0   3545.3  -1719.0   3438.0     3827 
@@ -612,32 +623,34 @@ summary(model_p)
     ## P_T_HS:PSA_GL:  0.018         0.058  -0.312    0.044                
     ## P_H_S:PSA_GL:  -0.076        -0.084   0.044   -0.194  -0.060
 
-### Three-Way Interaction
+## Three-Way Interaction
 
 The main model has Helmert coding for Pronoun and Effects coding (.5,
 -.5) for PSA and Biographies. This means Pronoun (T vs HS) \* PSA \*
 Biographies is testing the interaction between Pronoun and PSA across
 both Biographies conditions.
 
-Dummy coding Biographies with they/them biographies as 1 and he/she
+Dummy coding Biographies with *they* biographies as 1 and *he/she*
 biographies as 0 tests the interaction between Pronoun and PSA for just
-the he/she Biographies:
+the *he/she* Biographies:
 
 ``` r
-d %<>% mutate(BioDummy_T=Biographies)
-contrasts(d$BioDummy_T)=cbind("_They1"=c(0,1))
+exp2_d %<>% mutate(Biographies_HS0 = Biographies)
+contrasts(exp2_d$Biographies_HS0) <- cbind("_HS0_T1" = c(0, 1))
 
-model_p_dummyT <- glmer(P_Acc ~ Pronoun * PSA * BioDummy_T + (1|Name),
-                  data=d, family="binomial")
+exp2_m_prod_HS0 <- glmer(
+  P_Acc ~ Pronoun * PSA * Biographies_HS0 + (1 | Name),
+  data = exp2_d, family = binomial
+)
 
-summary(model_p_dummyT)
+summary(exp2_m_prod_HS0)
 ```
 
     ## Generalized linear mixed model fit by maximum likelihood (Laplace
     ##   Approximation) [glmerMod]
     ##  Family: binomial  ( logit )
-    ## Formula: P_Acc ~ Pronoun * PSA * BioDummy_T + (1 | Name)
-    ##    Data: d
+    ## Formula: P_Acc ~ Pronoun * PSA * Biographies_HS0 + (1 | Name)
+    ##    Data: exp2_d
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
     ##   3464.0   3545.3  -1719.0   3438.0     3827 
@@ -652,79 +665,82 @@ summary(model_p_dummyT)
     ## Number of obs: 3840, groups:  Name, 12
     ## 
     ## Fixed effects:
-    ##                                           Estimate Std. Error z value Pr(>|z|)
-    ## (Intercept)                                0.72475    0.07060  10.265   <2e-16
-    ## Pronoun_T_HS                               3.23575    0.13822  23.411   <2e-16
-    ## Pronoun_H_S                               -0.30307    0.17352  -1.747   0.0807
-    ## PSA_GenLang                               -0.10602    0.13243  -0.801   0.4234
-    ## BioDummy_T_They1                          -0.05933    0.09085  -0.653   0.5137
-    ## Pronoun_T_HS:PSA_GenLang                  -2.34842    0.27618  -8.503   <2e-16
-    ## Pronoun_H_S:PSA_GenLang                    0.19845    0.33288   0.596   0.5511
-    ## Pronoun_T_HS:BioDummy_T_They1             -0.16029    0.19079  -0.840   0.4008
-    ## Pronoun_H_S:BioDummy_T_They1               0.08451    0.22697   0.372   0.7096
-    ## PSA_GenLang:BioDummy_T_They1               0.42602    0.18169   2.345   0.0190
-    ## Pronoun_T_HS:PSA_GenLang:BioDummy_T_They1  0.88220    0.38159   2.312   0.0208
-    ## Pronoun_H_S:PSA_GenLang:BioDummy_T_They1   0.13412    0.45385   0.296   0.7676
-    ##                                              
-    ## (Intercept)                               ***
-    ## Pronoun_T_HS                              ***
-    ## Pronoun_H_S                               .  
-    ## PSA_GenLang                                  
-    ## BioDummy_T_They1                             
-    ## Pronoun_T_HS:PSA_GenLang                  ***
-    ## Pronoun_H_S:PSA_GenLang                      
-    ## Pronoun_T_HS:BioDummy_T_They1                
-    ## Pronoun_H_S:BioDummy_T_They1                 
-    ## PSA_GenLang:BioDummy_T_They1              *  
-    ## Pronoun_T_HS:PSA_GenLang:BioDummy_T_They1 *  
-    ## Pronoun_H_S:PSA_GenLang:BioDummy_T_They1     
+    ##                                                 Estimate Std. Error z value
+    ## (Intercept)                                      0.72475    0.07060  10.265
+    ## Pronoun_T_HS                                     3.23575    0.13822  23.411
+    ## Pronoun_H_S                                     -0.30307    0.17352  -1.747
+    ## PSA_GenLang                                     -0.10602    0.13243  -0.801
+    ## Biographies_HS0_HS0_T1                          -0.05933    0.09085  -0.653
+    ## Pronoun_T_HS:PSA_GenLang                        -2.34842    0.27618  -8.503
+    ## Pronoun_H_S:PSA_GenLang                          0.19845    0.33288   0.596
+    ## Pronoun_T_HS:Biographies_HS0_HS0_T1             -0.16029    0.19079  -0.840
+    ## Pronoun_H_S:Biographies_HS0_HS0_T1               0.08451    0.22697   0.372
+    ## PSA_GenLang:Biographies_HS0_HS0_T1               0.42602    0.18169   2.345
+    ## Pronoun_T_HS:PSA_GenLang:Biographies_HS0_HS0_T1  0.88220    0.38159   2.312
+    ## Pronoun_H_S:PSA_GenLang:Biographies_HS0_HS0_T1   0.13412    0.45385   0.296
+    ##                                                 Pr(>|z|)    
+    ## (Intercept)                                       <2e-16 ***
+    ## Pronoun_T_HS                                      <2e-16 ***
+    ## Pronoun_H_S                                       0.0807 .  
+    ## PSA_GenLang                                       0.4234    
+    ## Biographies_HS0_HS0_T1                            0.5137    
+    ## Pronoun_T_HS:PSA_GenLang                          <2e-16 ***
+    ## Pronoun_H_S:PSA_GenLang                           0.5511    
+    ## Pronoun_T_HS:Biographies_HS0_HS0_T1               0.4008    
+    ## Pronoun_H_S:Biographies_HS0_HS0_T1                0.7096    
+    ## PSA_GenLang:Biographies_HS0_HS0_T1                0.0190 *  
+    ## Pronoun_T_HS:PSA_GenLang:Biographies_HS0_HS0_T1   0.0208 *  
+    ## Pronoun_H_S:PSA_GenLang:Biographies_HS0_HS0_T1    0.7676    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
-    ##                (Intr) Pr_T_HS Pr_H_S PSA_GnL BD_T_T Pr_T_HS:PSA_GL
+    ##                (Intr) Pr_T_HS Pr_H_S PSA_GnL B_HS0_ Pr_T_HS:PSA_GL
     ## Pronon_T_HS     0.074                                             
     ## Pronoun_H_S    -0.093 -0.075                                      
     ## PSA_GenLang    -0.314  0.017   0.066                              
-    ## BDmmy_T_Th1    -0.684 -0.056   0.071  0.244                       
+    ## B_HS0_HS0_T    -0.684 -0.056   0.071  0.244                       
     ## Pr_T_HS:PSA_GL  0.015 -0.367   0.050  0.078  -0.012               
     ## Pr_H_S:PSA_GL   0.065  0.050  -0.294 -0.102  -0.050 -0.073        
-    ## P_T_HS:BD_T    -0.052 -0.722   0.049 -0.012   0.058  0.265        
-    ## P_H_S:BD_T_     0.070  0.055  -0.705 -0.051  -0.084 -0.037        
-    ## PSA_GL:BD_T     0.229 -0.012  -0.049 -0.729  -0.251 -0.057        
+    ## P_T_HS:B_HS    -0.052 -0.722   0.049 -0.012   0.058  0.265        
+    ## P_H_S:B_HS0     0.070  0.055  -0.705 -0.051  -0.084 -0.037        
+    ## PSA_GL:B_HS     0.229 -0.012  -0.049 -0.729  -0.251 -0.057        
     ## P_T_HS:PSA_GL: -0.011  0.266  -0.036 -0.056   0.071 -0.724        
     ## P_H_S:PSA_GL:  -0.047 -0.036   0.215  0.074   0.061  0.054        
     ##                Pr_H_S:PSA_GL P_T_HS:B P_H_S:B PSA_GL: P_T_HS:PSA_GL:
     ## Pronon_T_HS                                                         
     ## Pronoun_H_S                                                         
     ## PSA_GenLang                                                         
-    ## BDmmy_T_Th1                                                         
+    ## B_HS0_HS0_T                                                         
     ## Pr_T_HS:PSA_GL                                                      
     ## Pr_H_S:PSA_GL                                                       
-    ## P_T_HS:BD_T    -0.036                                               
-    ## P_H_S:BD_T_     0.225        -0.060                                 
-    ## PSA_GL:BD_T     0.074         0.071    0.061                        
+    ## P_T_HS:B_HS    -0.036                                               
+    ## P_H_S:B_HS0     0.225        -0.060                                 
+    ## PSA_GL:B_HS     0.074         0.071    0.061                        
     ## P_T_HS:PSA_GL:  0.053        -0.312    0.044   0.058                
     ## P_H_S:PSA_GL:  -0.733         0.044   -0.194  -0.084  -0.060
 
-Conversely, dummy coding Biographies with he/she biographies as 1 and
-they biographies as 0 tests the interaction between Pronoun and PSA for
-just the they Biographies.
+Conversely, dummy coding Biographies with *he/she* biographies as 1 and
+*they* biographies as 0 tests the interaction between Pronoun and PSA
+for just the *they* Biographies.
 
 ``` r
-d %<>% mutate(BioDummy_HS=Biographies)
-contrasts(d$BioDummy_HS)=cbind("_HeShe"=c(1,0))
+exp2_d %<>% mutate(Biographies_T0 = Biographies)
+contrasts(exp2_d$Biographies_T0) <- cbind("_T0_HS1" = c(1, 0))
 
-model_p_dummyHS <- glmer(P_Acc ~ Pronoun * PSA * BioDummy_HS + (1|Name),
-                        data=d, family="binomial")
-summary(model_p_dummyHS)
+exp2_m_prod_T0 <- glmer(
+  P_Acc ~ Pronoun * PSA * Biographies_T0 + (1 | Name),
+  data = exp2_d, family = binomial
+)
+
+summary(exp2_m_prod_T0)
 ```
 
     ## Generalized linear mixed model fit by maximum likelihood (Laplace
     ##   Approximation) [glmerMod]
     ##  Family: binomial  ( logit )
-    ## Formula: P_Acc ~ Pronoun * PSA * BioDummy_HS + (1 | Name)
-    ##    Data: d
+    ## Formula: P_Acc ~ Pronoun * PSA * Biographies_T0 + (1 | Name)
+    ##    Data: exp2_d
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
     ##   3464.0   3545.3  -1719.0   3438.0     3827 
@@ -739,141 +755,152 @@ summary(model_p_dummyHS)
     ## Number of obs: 3840, groups:  Name, 12
     ## 
     ## Fixed effects:
-    ##                                            Estimate Std. Error z value Pr(>|z|)
-    ## (Intercept)                                 0.66541    0.06685   9.954  < 2e-16
-    ## Pronoun_T_HS                                3.07546    0.13207  23.286  < 2e-16
-    ## Pronoun_H_S                                -0.21855    0.16160  -1.352   0.1762
-    ## PSA_GenLang                                 0.31999    0.12441   2.572   0.0101
-    ## BioDummy_HS_HeShe                           0.05934    0.09085   0.653   0.5137
-    ## Pronoun_T_HS:PSA_GenLang                   -1.46623    0.26337  -5.567 2.59e-08
-    ## Pronoun_H_S:PSA_GenLang                     0.33259    0.30870   1.077   0.2813
-    ## Pronoun_T_HS:BioDummy_HS_HeShe              0.16030    0.19081   0.840   0.4008
-    ## Pronoun_H_S:BioDummy_HS_HeShe              -0.08453    0.22703  -0.372   0.7096
-    ## PSA_GenLang:BioDummy_HS_HeShe              -0.42602    0.18172  -2.344   0.0191
-    ## Pronoun_T_HS:PSA_GenLang:BioDummy_HS_HeShe -0.88224    0.38179  -2.311   0.0208
-    ## Pronoun_H_S:PSA_GenLang:BioDummy_HS_HeShe  -0.13417    0.45422  -0.295   0.7677
-    ##                                               
-    ## (Intercept)                                ***
-    ## Pronoun_T_HS                               ***
-    ## Pronoun_H_S                                   
-    ## PSA_GenLang                                *  
-    ## BioDummy_HS_HeShe                             
-    ## Pronoun_T_HS:PSA_GenLang                   ***
-    ## Pronoun_H_S:PSA_GenLang                       
-    ## Pronoun_T_HS:BioDummy_HS_HeShe                
-    ## Pronoun_H_S:BioDummy_HS_HeShe                 
-    ## PSA_GenLang:BioDummy_HS_HeShe              *  
-    ## Pronoun_T_HS:PSA_GenLang:BioDummy_HS_HeShe *  
-    ## Pronoun_H_S:PSA_GenLang:BioDummy_HS_HeShe     
+    ##                                                Estimate Std. Error z value
+    ## (Intercept)                                     0.66541    0.06685   9.954
+    ## Pronoun_T_HS                                    3.07546    0.13207  23.286
+    ## Pronoun_H_S                                    -0.21855    0.16160  -1.352
+    ## PSA_GenLang                                     0.31999    0.12441   2.572
+    ## Biographies_T0_T0_HS1                           0.05934    0.09085   0.653
+    ## Pronoun_T_HS:PSA_GenLang                       -1.46623    0.26337  -5.567
+    ## Pronoun_H_S:PSA_GenLang                         0.33259    0.30870   1.077
+    ## Pronoun_T_HS:Biographies_T0_T0_HS1              0.16030    0.19081   0.840
+    ## Pronoun_H_S:Biographies_T0_T0_HS1              -0.08453    0.22703  -0.372
+    ## PSA_GenLang:Biographies_T0_T0_HS1              -0.42602    0.18172  -2.344
+    ## Pronoun_T_HS:PSA_GenLang:Biographies_T0_T0_HS1 -0.88224    0.38179  -2.311
+    ## Pronoun_H_S:PSA_GenLang:Biographies_T0_T0_HS1  -0.13417    0.45422  -0.295
+    ##                                                Pr(>|z|)    
+    ## (Intercept)                                     < 2e-16 ***
+    ## Pronoun_T_HS                                    < 2e-16 ***
+    ## Pronoun_H_S                                      0.1762    
+    ## PSA_GenLang                                      0.0101 *  
+    ## Biographies_T0_T0_HS1                            0.5137    
+    ## Pronoun_T_HS:PSA_GenLang                       2.59e-08 ***
+    ## Pronoun_H_S:PSA_GenLang                          0.2813    
+    ## Pronoun_T_HS:Biographies_T0_T0_HS1               0.4008    
+    ## Pronoun_H_S:Biographies_T0_T0_HS1                0.7096    
+    ## PSA_GenLang:Biographies_T0_T0_HS1                0.0191 *  
+    ## Pronoun_T_HS:PSA_GenLang:Biographies_T0_T0_HS1   0.0208 *  
+    ## Pronoun_H_S:PSA_GenLang:Biographies_T0_T0_HS1    0.7677    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
-    ##                (Intr) Pr_T_HS Pr_H_S PSA_GnL BD_HS_ Pr_T_HS:PSA_GL
+    ##                (Intr) Pr_T_HS Pr_H_S PSA_GnL B_T0_T Pr_T_HS:PSA_GL
     ## Pronon_T_HS     0.035                                             
     ## Pronoun_H_S    -0.058 -0.049                                      
     ## PSA_GenLang    -0.145  0.131   0.049                              
-    ## BDmmy_HS_HS    -0.637 -0.025   0.041  0.106                       
+    ## B_T0_T0_HS1    -0.637 -0.025   0.041  0.106                       
     ## Pr_T_HS:PSA_GL  0.122 -0.252   0.035  0.036  -0.090               
     ## Pr_H_S:PSA_GL   0.049  0.038  -0.061 -0.063  -0.035 -0.045        
-    ## P_T_HS:BD_H    -0.024 -0.689   0.031 -0.090   0.058  0.174        
-    ## P_H_S:BD_HS     0.040  0.029  -0.648 -0.035  -0.084 -0.025        
-    ## PSA_GL:BD_H     0.099 -0.090  -0.034 -0.685  -0.251 -0.025        
+    ## P_T_HS:B_T0    -0.024 -0.689   0.031 -0.090   0.058  0.174        
+    ## P_H_S:B_T0_     0.040  0.029  -0.648 -0.035  -0.084 -0.025        
+    ## PSA_GL:B_T0     0.099 -0.090  -0.034 -0.685  -0.251 -0.025        
     ## P_T_HS:PSA_GL: -0.084  0.172  -0.023 -0.025   0.071 -0.690        
     ## P_H_S:PSA_GL:  -0.033 -0.026   0.042  0.043   0.061  0.031        
     ##                Pr_H_S:PSA_GL P_T_HS:B P_H_S:B PSA_GL: P_T_HS:PSA_GL:
     ## Pronon_T_HS                                                         
     ## Pronoun_H_S                                                         
     ## PSA_GenLang                                                         
-    ## BDmmy_HS_HS                                                         
+    ## B_T0_T0_HS1                                                         
     ## Pr_T_HS:PSA_GL                                                      
     ## Pr_H_S:PSA_GL                                                       
-    ## P_T_HS:BD_H    -0.026                                               
-    ## P_H_S:BD_HS     0.042        -0.060                                 
-    ## PSA_GL:BD_H     0.043         0.071    0.061                        
+    ## P_T_HS:B_T0    -0.026                                               
+    ## P_H_S:B_T0_     0.042        -0.060                                 
+    ## PSA_GL:B_T0     0.043         0.071    0.061                        
     ## P_T_HS:PSA_GL:  0.031        -0.312    0.044   0.058                
     ## P_H_S:PSA_GL:  -0.680         0.044   -0.194  -0.084  -0.060
 
 The three models to compare:
 
 ``` r
-interaction_1 <- tidy(model_p@model) %>% 
-  select(term, estimate, p.value) %>%
-  filter(term=="Pronoun_T_HS" | term=="PSA_GenLang" |
-           term=="Pronoun_T_HS:PSA_GenLang") %>%
-  rename("AcrossBio_Est"="estimate", "AcrossBio_p"="p.value")
+exp2_r_prod_interaction <- bind_rows(.id = "model",
+  "Across_Bio" = exp2_m_prod@model %>% tidy(),
+  "HeShe_Bio"  = exp2_m_prod_HS0   %>% tidy(),
+  "They_Bio"   = exp2_m_prod_T0    %>% tidy()
+  ) %>%
+  select(model, term, estimate, p.value) %>%
+  filter(
+    term == "Pronoun_T_HS" |
+    term == "PSA_GenLang" |
+    term == "Pronoun_T_HS:PSA_GenLang"
+  ) %>%
+  arrange(term, model)
 
-interaction_2 <- tidy(model_p_dummyT) %>% 
-  select(term, estimate, p.value) %>%
-  filter(term=="Pronoun_T_HS" | term=="PSA_GenLang" |
-           term=="Pronoun_T_HS:PSA_GenLang") %>%
-  rename("HeSheBio_Est"="estimate", "HeSheBio_p"="p.value") %>%
-  left_join(interaction_1)
+exp2_r_prod_interaction
 ```
 
-    ## Joining, by = "term"
+    ## # A tibble: 9 × 4
+    ##   model      term                     estimate   p.value
+    ##   <chr>      <chr>                       <dbl>     <dbl>
+    ## 1 Across_Bio PSA_GenLang                 0.107 2.39e-  1
+    ## 2 HeShe_Bio  PSA_GenLang                -0.106 4.23e-  1
+    ## 3 They_Bio   PSA_GenLang                 0.320 1.01e-  2
+    ## 4 Across_Bio Pronoun_T_HS                3.16  4.10e-238
+    ## 5 HeShe_Bio  Pronoun_T_HS                3.24  3.32e-121
+    ## 6 They_Bio   Pronoun_T_HS                3.08  6.17e-120
+    ## 7 Across_Bio Pronoun_T_HS:PSA_GenLang   -1.91  1.54e- 23
+    ## 8 HeShe_Bio  Pronoun_T_HS:PSA_GenLang   -2.35  1.84e- 17
+    ## 9 They_Bio   Pronoun_T_HS:PSA_GenLang   -1.47  2.59e-  8
 
-``` r
-interaction_3 <- tidy(model_p_dummyHS) %>% 
-  select(term, estimate, p.value) %>%
-  filter(term=="Pronoun_T_HS" | term=="PSA_GenLang" |
-           term=="Pronoun_T_HS:PSA_GenLang") %>%
-  rename("TheyBio_Est"="estimate", "TheyBio_p"="p.value") %>%
-  left_join(interaction_2)
-```
-
-    ## Joining, by = "term"
-
-``` r
-interaction_3
-```
-
-    ## # A tibble: 3 x 7
-    ##   term   TheyBio_Est TheyBio_p HeSheBio_Est HeSheBio_p AcrossBio_Est AcrossBio_p
-    ##   <chr>        <dbl>     <dbl>        <dbl>      <dbl>         <dbl>       <dbl>
-    ## 1 Prono~       3.08  6.17e-120        3.24   3.32e-121         3.16    4.10e-238
-    ## 2 PSA_G~       0.320 1.01e-  2       -0.106  4.23e-  1         0.107   2.39e-  1
-    ## 3 Prono~      -1.47  2.59e-  8       -2.35   1.84e- 17        -1.91    1.54e- 23
-
-The estimate for the PSA\*Pronoun interaction is -2.34 for the he/she
-biographies and -1.47 for the they biographies, which means that the
+The estimate for the PSA\*Pronoun interaction is -2.34 for the *he/she*
+biographies and -1.47 for the *they* biographies, which means that the
 pronoun PSA reduced the relative difficulty of they/them more when
-paired with the he/she biographies than with they biographies.
+paired with the *he/she* biographies than with *they* biographies.
 Connecting to the plot, the PSA-Neither difference is larger than
 Both-Story difference.
 
-### Producing they/them at least once
+## Producing they/them at least once
 
 ``` r
-d %>% filter(P_Response=="they/them") %>%
-  group_by(Condition) %>% 
-  summarize(they=n_distinct(Participant)) %>%
-  mutate(n=80) %>%
-  mutate(prop=they/n)
+exp2_d %>%
+  filter(P_Response == "they/them") %>%
+  group_by(Condition) %>%
+  summarise(
+    n    = n_distinct(Participant),
+    prop = n / 80
+  )
 ```
 
-    ## # A tibble: 4 x 4
-    ##   Condition  they     n  prop
-    ##   <fct>     <int> <dbl> <dbl>
-    ## 1 both         38    80 0.475
-    ## 2 neither      21    80 0.262
-    ## 3 psa          46    80 0.575
-    ## 4 story        28    80 0.35
+    ## # A tibble: 4 × 3
+    ##   Condition     n  prop
+    ##   <fct>     <int> <dbl>
+    ## 1 both         38 0.475
+    ## 2 neither      21 0.262
+    ## 3 psa          46 0.575
+    ## 4 story        28 0.35
 
 Model with whether each participant produced they/them at least once as
 the outcome variable. Higher with the gendered language PSA, no effect
 of Biographies, vaguely trending interaction.
 
 ``` r
-model_p_they <- glm(P_UseThey ~ PSA * Biographies, 
-                d_they, family="binomial")
-summary(model_p_they)
+exp2_d_they <- exp2_d %>%
+  mutate(
+    M_IsThey = ifelse(M_Response == "they/them", 1, 0),
+    P_IsThey = ifelse(P_Response == "they/them", 1, 0)
+  ) %>%
+  group_by(Participant, Condition, PSA, Biographies) %>%
+  summarise(
+    M_Count = sum(M_IsThey),
+    P_Count = sum(P_IsThey)
+  ) %>%
+  mutate(
+    M_UseThey = ifelse(M_Count != 0, 1, 0),
+    P_UseThey = ifelse(P_Count != 0, 1, 0)
+  )
+
+exp2_m_prod_useThey <- glm(
+  formula = P_UseThey ~ PSA * Biographies,
+  data = exp2_d_they, family = binomial
+)
+
+summary(exp2_m_prod_useThey)
 ```
 
     ## 
     ## Call:
-    ## glm(formula = P_UseThey ~ PSA * Biographies, family = "binomial", 
-    ##     data = d_they)
+    ## glm(formula = P_UseThey ~ PSA * Biographies, family = binomial, 
+    ##     data = exp2_d_they)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
@@ -898,14 +925,15 @@ summary(model_p_they)
 
 # Memory Predicting Production
 
-### Descriptive Stats
+## Descriptive Stats
 
 ``` r
-d %>% group_by(Pronoun, Condition, M_Acc) %>%
-      summarise(m=mean(P_Acc))    
+exp2_d %>%
+  group_by(Pronoun, Condition, M_Acc) %>%
+  summarise(m = mean(P_Acc))
 ```
 
-    ## # A tibble: 24 x 4
+    ## # A tibble: 24 × 4
     ## # Groups:   Pronoun, Condition [12]
     ##    Pronoun Condition M_Acc     m
     ##    <fct>   <fct>     <int> <dbl>
@@ -919,43 +947,68 @@ d %>% group_by(Pronoun, Condition, M_Acc) %>%
     ##  8 he/him  story         1 0.892
     ##  9 she/her both          0 0.721
     ## 10 she/her both          1 0.857
-    ## # ... with 14 more rows
+    ## # … with 14 more rows
 
 Combining the two measures, there are 4 possible patterns: getting both
 right, getting both wrong, getting just memory right, and getting just
 production right.
 
 ``` r
-mp_acc <- d %>% 
-          mutate(BothRight=ifelse(M_Acc==1 & P_Acc==1, 1, 0)) %>%
-          mutate(BothWrong=ifelse(M_Acc==0 & P_Acc==0, 1, 0)) %>%
-          mutate(MemOnly=ifelse(M_Acc==1 & P_Acc==0, 1, 0)) %>%
-          mutate(ProdOnly=ifelse(M_Acc==0 & P_Acc==1, 1, 0)) %>%
-          pivot_longer(cols=c(BothRight, BothWrong, MemOnly, ProdOnly),
-                       names_to="Combined_Accuracy") %>%
-          group_by(Pronoun, Combined_Accuracy) %>%
-          summarise(m=mean(value))
-mp_acc
+exp2_r_dist <- exp2_d %>%
+  mutate(
+    Combined_Accuracy = case_when(
+      M_Acc == 1 & P_Acc == 1 ~ "Both right",
+      M_Acc == 0 & P_Acc == 0 ~ "Both wrong",
+      M_Acc == 1 & P_Acc == 0 ~ "Memory only",
+      M_Acc == 0 & P_Acc == 1 ~ "Production only"
+    )
+  ) %>%
+  group_by(Pronoun, Condition, Combined_Accuracy) %>%
+  summarise(n = n())
+
+exp2_r_dist
 ```
 
-    ## # A tibble: 12 x 3
-    ## # Groups:   Pronoun [3]
-    ##    Pronoun   Combined_Accuracy      m
-    ##    <fct>     <chr>              <dbl>
-    ##  1 he/him    BothRight         0.691 
-    ##  2 he/him    BothWrong         0.0430
-    ##  3 he/him    MemOnly           0.0977
-    ##  4 he/him    ProdOnly          0.169 
-    ##  5 she/her   BothRight         0.695 
-    ##  6 she/her   BothWrong         0.0531
-    ##  7 she/her   MemOnly           0.117 
-    ##  8 she/her   ProdOnly          0.134 
-    ##  9 they/them BothRight         0.166 
-    ## 10 they/them BothWrong         0.397 
-    ## 11 they/them MemOnly           0.381 
-    ## 12 they/them ProdOnly          0.0555
+    ## # A tibble: 48 × 4
+    ## # Groups:   Pronoun, Condition [12]
+    ##    Pronoun Condition Combined_Accuracy     n
+    ##    <fct>   <fct>     <chr>             <int>
+    ##  1 he/him  both      Both right          208
+    ##  2 he/him  both      Both wrong           21
+    ##  3 he/him  both      Memory only          32
+    ##  4 he/him  both      Production only      59
+    ##  5 he/him  neither   Both right          243
+    ##  6 he/him  neither   Both wrong            7
+    ##  7 he/him  neither   Memory only          19
+    ##  8 he/him  neither   Production only      51
+    ##  9 he/him  psa       Both right          209
+    ## 10 he/him  psa       Both wrong           14
+    ## # … with 38 more rows
 
-### Model
+Production accuracy for they/them when memory was correct vs incorrect.
+
+``` r
+exp2_d %>%
+  filter(Pronoun == "they/them") %>%
+  group_by(Condition, M_Acc) %>%
+  summarise(P_Acc = mean(P_Acc))
+```
+
+    ## # A tibble: 8 × 3
+    ## # Groups:   Condition [4]
+    ##   Condition M_Acc  P_Acc
+    ##   <fct>     <int>  <dbl>
+    ## 1 both          0 0.175 
+    ## 2 both          1 0.443 
+    ## 3 neither       0 0.0395
+    ## 4 neither       1 0.167 
+    ## 5 psa           0 0.182 
+    ## 6 psa           1 0.441 
+    ## 7 story         0 0.108 
+    ## 8 story         1 0.130
+
+## Model
+
 ``` r
 exp2_d %<>% mutate(M_Acc_Factor = as.factor(M_Acc))
 
