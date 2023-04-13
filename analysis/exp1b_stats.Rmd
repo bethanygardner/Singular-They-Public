@@ -206,28 +206,92 @@ mp_acc
 
 ### Model
 
-Model predicting production accuracy with pronoun type and memory
-accuracy. Here, the maximal model includes no random effects.
+Create factor for Memory Accuracy that is mean-center effects coded,
+comparing incorrect to correct.
 
 ```{r}
-model_mp_full <- P_Acc ~ M_Acc * Pronoun + 
-  (1 + Pronoun|SubjID) + (1 + Pronoun|Name)
+#| label: exp1b-mean-center-acc
 
-model_mp <- buildmer(model_mp_full, data=mp, 
-            family='binomial', direction=c('order'))
-summary(model_mp)
+exp1b_d %<>% mutate(M_Acc_Factor = as.factor(M_Acc))
+contrasts(exp1b_d$M_Acc_Factor) <- cbind("wrong vs right" = c(-0.5, +0.5))
+contrasts(exp1b_d$M_Acc_Factor)
 ```
 
-Convert to odds:
 
 ```{r}
-exp(1.49113)  #memory accuracy
-exp(-1.15555) #they/them vs. he/him + she/her * memory accuracy
+#| label: exp1b-mp-model-buildmer
+#| cache: true
+
+exp1b_m_mp_buildmer <- buildmer(
+  formula = P_Acc ~ M_Acc_Factor * Pronoun +
+    (Pronoun * M_Acc_Factor | SubjID) + (M_Acc_Factor * Pronoun | Name),
+  data = exp1b_d, family = binomial,
+  buildmerControl(direction = "order")
+)
+
+summary(exp1b_m_mp_buildmer)
 ```
 
--   The effect of memory accuracy is significant (p\<.001), such that
-    participants are 4.44x more likely to get the production right if
-    they got the memory right.
+buildmer doesn't include any random effects, which is odd. Here I'm starting by adding back the by-subject random intercepts (based on that having the larger variance in the production model).
+
+```{r}
+#| label: exp1b-mp-model-subj-intercepts
+#| cache: true
+
+exp1b_m_mp_subjInt <- glmer(
+  formula = P_Acc ~ M_Acc_Factor * Pronoun + (1 | SubjID),
+  data = exp1b_d, family = binomial
+)
+summary(exp1b_m_mp_subjInt)
+
+exp1b_opt_subjInt <- allFit(exp1b_m_mp_subjInt)
+summary(exp1b_opt_subjInt)
+```
+
+Most of the optimizers are throwing convergence errors, and all of the estimates are very consistent across optimizers. But the z values are weird and you shouldn't get identical SEs, so the errors aren't ok to ignore.
+
+Check by-item intercepts:
+
+```{r}
+#| label: exp1b-mp-model-item-intercepts
+#| cache: true
+
+exp1b_m_mp_itemInt <- glmer(
+  formula = P_Acc ~ M_Acc_Factor * Pronoun + (1 | Name),
+  data = exp1b_d, family = binomial
+)
+summary(exp1b_m_mp_itemInt)
+
+exp1b_opt_itemInt <- allFit(exp1b_m_mp_itemInt)
+summary(exp1b_opt_itemInt)
+```
+
+The by-item intercept model isn't giving impossible results, but two of the optimizers have very different estimates for the random intercepts than the rest of them, so let's just stick with the original model:
+
+```{r}
+#| label: exp1b-mp-model-results
+
+summary(exp1b_m_mp_buildmer)
+
+# memory accuracy
+exp1b_m_mp_buildmer@model %>%
+  get_parameters() %>%
+  filter(Parameter == "M_Acc_Factorwrong vs right") %>%
+  pull(Estimate) %>%
+  exp()
+
+# they/them vs. he/him + she/her * memory accuracy
+exp1b_m_mp_buildmer@model %>%
+  get_parameters() %>%
+  filter(Parameter == "Pronounthey vs he+she:M_Acc_Factorwrong vs right") %>%
+  pull(Estimate) %>%
+  exp()
+```
+
+-   The effect of memory accuracy is significant (p\<.001), such that participants are 4.44x more likely to get the production right if they got the memory right.
+
+-   Significant interaction between pronoun type (they/them vs. he/him + she/her) and memory accuracy (p\<.05) (odds 0.31). The relative difficulty of they/them was attenuated when the participant had correctly remembered the character's pronoun during the memory phase of the task.
+
 
 -   Significant interaction between pronoun type (they/them vs. he/him +
     she/her) and memory accuracy (p\<.05) (odds 0.31). The relative

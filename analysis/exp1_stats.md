@@ -454,82 +454,98 @@ mp_acc
     ## 12 they/them ProdOnly          0.0833
 
 ### Model
+## Model
+
+``` r
+exp1a_d %<>% mutate(M_Acc_Factor = as.factor(M_Acc))
+contrasts(exp1a_d$M_Acc_Factor) <- cbind("wrong vs right" = c(-0.5, +0.5))
+contrasts(exp1a_d$M_Acc_Factor)
+```
+
+    ##   wrong vs right
+    ## 0           -0.5
+    ## 1            0.5
 
 Model predicting production accuracy with pronoun type and memory
 accuracy. Otherwise the same model specifications as the first two. The
 maximal model includes random intercepts by participant.
 
 ``` r
-model_mp_full <- P_Acc ~ M_Acc * Pronoun + 
-                 (1 + Pronoun|SubjID) + (1 + Pronoun|Name)
-
-model_mp <- buildmer(model_mp_full, data=mp, family='binomial', 
-                     direction=c('order'))
+exp1a_m_mp <- buildmer(
+  formula = P_Acc ~ M_Acc_Factor * Pronoun +
+    (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1a_d, family = binomial,
+  buildmerControl(direction = "order")
+)
 ```
 
     ## Determining predictor order
 
     ## Fitting via glm: P_Acc ~ 1
 
-    ## Currently evaluating LRT for: M_Acc, Pronoun
+    ## Currently evaluating LRT for: M_Acc_Factor, Pronoun
 
-    ## Fitting via glm: P_Acc ~ 1 + M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + M_Acc_Factor
 
     ## Fitting via glm: P_Acc ~ 1 + Pronoun
 
     ## Updating formula: P_Acc ~ 1 + Pronoun
 
-    ## Currently evaluating LRT for: M_Acc
+    ## Currently evaluating LRT for: M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor
 
-    ## Currently evaluating LRT for: M_Acc:Pronoun
+    ## Currently evaluating LRT for: M_Acc_Factor:Pronoun
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + M_Acc:Pronoun
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     M_Acc_Factor:Pronoun
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + M_Acc:Pronoun
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     M_Acc_Factor:Pronoun
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + M_Acc:Pronoun
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     M_Acc_Factor:Pronoun
 
-    ## Currently evaluating LRT for: 1 | Name, 1 | SubjID
+    ## Currently evaluating LRT for: 1 | SubjID, 1 | Name
 
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc + Pronoun:M_Acc
-    ##     + (1 | Name)
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + (1 | SubjID)
 
-    ## boundary (singular) fit: see help('isSingular')
-
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc + Pronoun:M_Acc
-    ##     + (1 | SubjID)
-
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + Pronoun:M_Acc + (1 |
-    ##     SubjID)
-
-    ## Currently evaluating LRT for: 1 | Name, Pronoun | SubjID
-
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc + Pronoun:M_Acc
-    ##     + (1 | SubjID) + (1 | Name)
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + (1 | Name)
 
     ## boundary (singular) fit: see help('isSingular')
 
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc + Pronoun:M_Acc
-    ##     + (1 + Pronoun | SubjID)
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + (1 | SubjID)
+
+    ## Currently evaluating LRT for: Pronoun | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + (1 + Pronoun | SubjID)
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + (1 | SubjID) + (1 | Name)
+
+    ## boundary (singular) fit: see help('isSingular')
 
     ## Ending the ordering procedure due to having reached the maximal
     ##     feasible model - all higher models failed to converge. The types of
-    ##     convergence failure are: Singular fit lme4 reports not having
-    ##     converged (-1)
+    ##     convergence failure are: lme4 reports not having converged (-1)
+    ##     Singular fit
 
 ``` r
-summary(model_mp)
+summary(exp1a_m_mp)
 ```
 
     ## Generalized linear mixed model fit by maximum likelihood (Laplace
     ##   Approximation) (p-values based on Wald z-scores) [glmerMod]
     ##  Family: binomial  ( logit )
-    ## Formula: P_Acc ~ 1 + Pronoun + M_Acc + Pronoun:M_Acc + (1 | SubjID)
-    ##    Data: mp
+    ## Formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + Pronoun:M_Acc_Factor + (1 |  
+    ##     SubjID)
+    ##    Data: exp1a_d
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
     ##   1124.1   1159.9   -555.0   1110.1     1217 
@@ -544,37 +560,65 @@ summary(model_mp)
     ## Number of obs: 1224, groups:  SubjID, 102
     ## 
     ## Fixed effects:
-    ##                             Estimate Std. Error z value Pr(>|z|) Pr(>|t|)    
-    ## (Intercept)                   0.1287     0.1454  0.8853    0.376   0.3760    
-    ## Pronounthey vs he+she         3.0163     0.2726 11.0659    0.000  < 2e-16 ***
-    ## Pronounhe vs she              0.2549     0.3452  0.7385    0.460   0.4602    
-    ## M_Acc                         1.2452     0.1682  7.4048    0.000 1.31e-13 ***
-    ## Pronounthey vs he+she:M_Acc  -0.8196     0.3364 -2.4365    0.015   0.0148 *  
-    ## Pronounhe vs she:M_Acc       -0.0641     0.4292 -0.1493    0.881   0.8813    
+    ##                                                  Estimate Std. Error  z value
+    ## (Intercept)                                       0.75129    0.10249  7.33061
+    ## Pronounthey vs he+she                             2.60652    0.17635 14.78056
+    ## Pronounhe vs she                                  0.22289    0.21153  1.05371
+    ## M_Acc_Factorwrong vs right                        1.24522    0.16816  7.40482
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right -0.81953    0.33637 -2.43640
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right      -0.06404    0.42923 -0.14919
+    ##                                                  Pr(>|z|) Pr(>|t|)    
+    ## (Intercept)                                         0.000 2.29e-13 ***
+    ## Pronounthey vs he+she                               0.000  < 2e-16 ***
+    ## Pronounhe vs she                                    0.292   0.2920    
+    ## M_Acc_Factorwrong vs right                          0.000 1.31e-13 ***
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right    0.015   0.0148 *  
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right         0.881   0.8814    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
     ## Correlation of Fixed Effects:
-    ##             (Intr) Prnvh+ Prnnvs M_Acc  Pvh+:M
-    ## Prnnthyvsh+  0.224                            
-    ## Prononhvssh  0.061  0.061                     
-    ## M_Acc       -0.724 -0.145 -0.045              
-    ## Prvh+sh:M_A -0.163 -0.780 -0.043  0.158       
-    ## Prnnvsh:M_A -0.050 -0.051 -0.813  0.054  0.049
+    ##             (Intr) Prnvh+ Prnnvs M_A_vr Pvh+vr
+    ## Prnnthyvsh+  0.210                            
+    ## Prononhvssh  0.055  0.055                     
+    ## M_Acc_Fctvr -0.206 -0.073 -0.018              
+    ## Pvh+:M_A_vr -0.102 -0.251 -0.020  0.158       
+    ## Pvs:M_A_Fvr -0.027 -0.032 -0.312  0.054  0.049
 
 Convert to odds:
 
 ``` r
-exp(1.24520) #memory accuracy
+# memory accuracy
+exp1a_m_mp@model %>%
+  get_parameters() %>%
+  filter(Parameter == "M_Acc_Factorwrong vs right") %>%
+  pull(Estimate) %>%
+  exp()
 ```
 
-    ## [1] 3.473629
+    ## [1] 3.473682
 
 ``` r
-exp(-0.81954) #they/them vs. he/him + she/her * memory accuracy
+# they/them vs. he/him + she/her * memory accuracy
+exp1a_m_mp@model %>%
+  get_parameters() %>%
+  filter(Parameter == "Pronounthey vs he+she:M_Acc_Factorwrong vs right") %>%
+  pull(Estimate) %>%
+  exp()
 ```
 
-    ## [1] 0.4406343
+    ## [1] 0.4406391
+
+- The effect of memory accuracy is significant (p\<.001), such that
+  participants are 3.47x more likely to get the production right if they
+  got the memory right.
+
+- Significant interaction between pronoun type (they/them vs. he/him +
+  she/her) and memory accuracy (p\<.05) (odds 0.44). The relative
+  difficulty of they/them was attenuated when the participant had
+  correctly remembered the character’s pronoun during the memory phase
+  of the task.
+
 
 -   The effect of memory accuracy is significant (p\<.001), such that
     participants are 3.47x more likely to get the production right if

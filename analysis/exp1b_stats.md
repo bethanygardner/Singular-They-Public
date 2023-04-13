@@ -446,79 +446,100 @@ mp_acc
 
 ### Model
 
-Model predicting production accuracy with pronoun type and memory
-accuracy. Here, the maximal model includes no random effects.
+Create factor for Memory Accuracy that is mean-center effects coded,
+comparing incorrect to correct.
 
 ``` r
-model_mp_full <- P_Acc ~ M_Acc * Pronoun + 
-  (1 + Pronoun|SubjID) + (1 + Pronoun|Name)
+exp1b_d %<>% mutate(M_Acc_Factor = as.factor(M_Acc))
+contrasts(exp1b_d$M_Acc_Factor) <- cbind("wrong vs right" = c(-0.5, +0.5))
+contrasts(exp1b_d$M_Acc_Factor)
+```
 
-model_mp <- buildmer(model_mp_full, data=mp, 
-            family='binomial', direction=c('order'))
+    ##   wrong vs right
+    ## 0           -0.5
+    ## 1            0.5
+
+``` r
+exp1b_m_mp_buildmer <- buildmer(
+  formula = P_Acc ~ M_Acc_Factor * Pronoun +
+    (Pronoun * M_Acc_Factor | SubjID) + (M_Acc_Factor * Pronoun | Name),
+  data = exp1b_d, family = binomial,
+  buildmerControl(direction = "order")
+)
 ```
 
     ## Determining predictor order
 
     ## Fitting via glm: P_Acc ~ 1
 
-    ## Currently evaluating LRT for: M_Acc, Pronoun
+    ## Currently evaluating LRT for: M_Acc_Factor, Pronoun
 
-    ## Fitting via glm: P_Acc ~ 1 + M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + M_Acc_Factor
 
     ## Fitting via glm: P_Acc ~ 1 + Pronoun
 
     ## Updating formula: P_Acc ~ 1 + Pronoun
 
-    ## Currently evaluating LRT for: M_Acc
+    ## Currently evaluating LRT for: M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor
 
-    ## Currently evaluating LRT for: M_Acc:Pronoun
+    ## Currently evaluating LRT for: M_Acc_Factor:Pronoun
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + M_Acc:Pronoun
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     M_Acc_Factor:Pronoun
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + M_Acc:Pronoun
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     M_Acc_Factor:Pronoun
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + M_Acc:Pronoun
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     M_Acc_Factor:Pronoun
 
-    ## Currently evaluating LRT for: 1 | Name, 1 | SubjID
+    ## Currently evaluating LRT for: 1 | SubjID, 1 | Name
 
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc + Pronoun:M_Acc
-    ##     + (1 | Name)
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + (1 | SubjID)
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor + (1 | Name)
 
     ## boundary (singular) fit: see help('isSingular')
 
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc + Pronoun:M_Acc
-    ##     + (1 | SubjID)
-
     ## Ending the ordering procedure due to having reached the maximal
     ##     feasible model - all higher models failed to converge. The types of
-    ##     convergence failure are: Singular fit lme4 reports not having
-    ##     converged (-1)
+    ##     convergence failure are: lme4 reports not having converged (-1)
+    ##     Singular fit
 
 ``` r
-summary(model_mp)
+summary(exp1b_m_mp_buildmer)
 ```
 
     ## 
     ## Call:
-    ## stats::glm(formula = P_Acc ~ 1 + Pronoun + M_Acc + M_Acc:Pronoun, 
-    ##     family = "binomial", data = mp)
+    ## stats::glm(formula = P_Acc ~ 1 + Pronoun + M_Acc_Factor + M_Acc_Factor:Pronoun, 
+    ##     family = binomial, data = exp1b_d)
     ## 
     ## Deviance Residuals: 
     ##     Min       1Q   Median       3Q      Max  
     ## -2.0703  -0.5863   0.4995   0.5185   1.9214  
     ## 
     ## Coefficients:
-    ##                             Estimate Std. Error z value Pr(>|z|)    
-    ## (Intercept)                  0.02119    0.12994   0.163 0.870477    
-    ## Pronounthey vs he+she        2.56843    0.25749   9.975  < 2e-16 ***
-    ## Pronounhe vs she            -0.16062    0.34055  -0.472 0.637175    
-    ## M_Acc                        1.49113    0.16078   9.274  < 2e-16 ***
-    ## Pronounthey vs he+she:M_Acc -1.15555    0.32239  -3.584 0.000338 ***
-    ## Pronounhe vs she:M_Acc       0.24029    0.41760   0.575 0.565016    
+    ##                                                  Estimate Std. Error z value
+    ## (Intercept)                                       0.76675    0.08039   9.538
+    ## Pronounthey vs he+she                             1.99066    0.16120  12.349
+    ## Pronounhe vs she                                 -0.04048    0.20880  -0.194
+    ## M_Acc_Factorwrong vs right                        1.49113    0.16078   9.274
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right -1.15555    0.32239  -3.584
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right       0.24029    0.41760   0.575
+    ##                                                  Pr(>|z|)    
+    ## (Intercept)                                       < 2e-16 ***
+    ## Pronounthey vs he+she                             < 2e-16 ***
+    ## Pronounhe vs she                                 0.846278    
+    ## M_Acc_Factorwrong vs right                        < 2e-16 ***
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right 0.000338 ***
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right      0.565016    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
     ## 
@@ -530,7 +551,552 @@ summary(model_mp)
     ## 
     ## Number of Fisher Scoring iterations: 4
 
-Convert to odds:
+buildmer doesn’t include any random effects, which is odd. Here I’m
+starting by adding back the by-subject random intercepts (based on that
+having the larger variance in the production model).
+
+``` r
+exp1b_m_mp_subjInt <- glmer(
+  formula = P_Acc ~ M_Acc_Factor * Pronoun + (1 | SubjID),
+  data = exp1b_d, family = binomial
+)
+```
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## Model failed to converge with max|grad| = 0.0425739 (tol = 0.002, component 1)
+
+``` r
+summary(exp1b_m_mp_subjInt)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: P_Acc ~ M_Acc_Factor * Pronoun + (1 | SubjID)
+    ##    Data: exp1b_d
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   1090.6   1126.3   -538.3   1076.6     1205 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.8353 -0.3792  0.3033  0.4348  3.1647 
+    ## 
+    ## Random effects:
+    ##  Groups Name        Variance Std.Dev.
+    ##  SubjID (Intercept) 0.7483   0.865   
+    ## Number of obs: 1212, groups:  SubjID, 101
+    ## 
+    ## Fixed effects:
+    ##                                                   Estimate Std. Error z value
+    ## (Intercept)                                       0.898566   0.001665  539.66
+    ## M_Acc_Factorwrong vs right                        1.569237   0.001663  943.66
+    ## Pronounthey vs he+she                             2.306495   0.001663 1387.02
+    ## Pronounhe vs she                                 -0.061725   0.001663  -37.12
+    ## M_Acc_Factorwrong vs right:Pronounthey vs he+she -1.293479   0.001663 -777.58
+    ## M_Acc_Factorwrong vs right:Pronounhe vs she       0.334674   0.001663  201.29
+    ##                                                  Pr(>|z|)    
+    ## (Intercept)                                        <2e-16 ***
+    ## M_Acc_Factorwrong vs right                         <2e-16 ***
+    ## Pronounthey vs he+she                              <2e-16 ***
+    ## Pronounhe vs she                                   <2e-16 ***
+    ## M_Acc_Factorwrong vs right:Pronounthey vs he+she   <2e-16 ***
+    ## M_Acc_Factorwrong vs right:Pronounhe vs she        <2e-16 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) M_A_vr Prnvh+ Prnnvs M_vrvh
+    ## M_Acc_Fctvr 0.000                             
+    ## Prnnthyvsh+ 0.000  0.000                      
+    ## Prononhvssh 0.000  0.000  0.000               
+    ## M_A_Fvr:Pvh 0.000  0.000  0.000  0.000        
+    ## M_A_Fvr:Pvs 0.000  0.000  0.000  0.000  0.000 
+    ## optimizer (Nelder_Mead) convergence code: 0 (OK)
+    ## Model failed to converge with max|grad| = 0.0425739 (tol = 0.002, component 1)
+
+``` r
+exp1b_opt_subjInt <- allFit(exp1b_m_mp_subjInt)
+```
+
+    ## Loading required namespace: dfoptim
+
+    ## Loading required namespace: optimx
+
+    ## bobyqa : [OK]
+    ## Nelder_Mead :
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## Model failed to converge with max|grad| = 0.0425663 (tol = 0.002, component 1)
+
+    ## [OK]
+    ## nlminbwrap :
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## Model failed to converge with max|grad| = 0.0366285 (tol = 0.002, component 1)
+
+    ## [OK]
+    ## nmkbw :
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## Model failed to converge with max|grad| = 0.0440317 (tol = 0.002, component 1)
+
+    ## [OK]
+    ## optimx.L-BFGS-B :
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## Model failed to converge with max|grad| = 0.0477569 (tol = 0.002, component 1)
+
+    ## [OK]
+    ## nloptwrap.NLOPT_LN_NELDERMEAD :
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## unable to evaluate scaled gradient
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## Model failed to converge: degenerate Hessian with 1 negative eigenvalues
+
+    ## [OK]
+    ## nloptwrap.NLOPT_LN_BOBYQA :
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## unable to evaluate scaled gradient
+
+    ## Warning in checkConv(attr(opt, "derivs"), opt$par, ctrl = control$checkConv, :
+    ## Model failed to converge: degenerate Hessian with 1 negative eigenvalues
+
+    ## [OK]
+
+``` r
+summary(exp1b_opt_subjInt)
+```
+
+    ## $which.OK
+    ##                        bobyqa                   Nelder_Mead 
+    ##                          TRUE                          TRUE 
+    ##                    nlminbwrap                         nmkbw 
+    ##                          TRUE                          TRUE 
+    ##               optimx.L-BFGS-B nloptwrap.NLOPT_LN_NELDERMEAD 
+    ##                          TRUE                          TRUE 
+    ##     nloptwrap.NLOPT_LN_BOBYQA 
+    ##                          TRUE 
+    ## 
+    ## $msgs
+    ## $msgs$bobyqa
+    ## NULL
+    ## 
+    ## $msgs$Nelder_Mead
+    ## [1] "Model failed to converge with max|grad| = 0.0425663 (tol = 0.002, component 1)"
+    ## 
+    ## $msgs$nlminbwrap
+    ## [1] "Model failed to converge with max|grad| = 0.0366285 (tol = 0.002, component 1)"
+    ## 
+    ## $msgs$nmkbw
+    ## [1] "Model failed to converge with max|grad| = 0.0440317 (tol = 0.002, component 1)"
+    ## 
+    ## $msgs$`optimx.L-BFGS-B`
+    ## [1] "Model failed to converge with max|grad| = 0.0477569 (tol = 0.002, component 1)"
+    ## 
+    ## $msgs$nloptwrap.NLOPT_LN_NELDERMEAD
+    ## [1] "unable to evaluate scaled gradient"                                       
+    ## [2] "Model failed to converge: degenerate  Hessian with 1 negative eigenvalues"
+    ## 
+    ## $msgs$nloptwrap.NLOPT_LN_BOBYQA
+    ## [1] "unable to evaluate scaled gradient"                                       
+    ## [2] "Model failed to converge: degenerate  Hessian with 1 negative eigenvalues"
+    ## 
+    ## 
+    ## $fixef
+    ##                               (Intercept) M_Acc_Factorwrong vs right
+    ## bobyqa                          0.8950352                   1.568797
+    ## Nelder_Mead                     0.8985385                   1.570374
+    ## nlminbwrap                      0.8983151                   1.570995
+    ## nmkbw                           0.8985452                   1.570372
+    ## optimx.L-BFGS-B                 0.8976185                   1.571337
+    ## nloptwrap.NLOPT_LN_NELDERMEAD   0.8988380                   1.570183
+    ## nloptwrap.NLOPT_LN_BOBYQA       0.8988237                   1.570065
+    ##                               Pronounthey vs he+she Pronounhe vs she
+    ## bobyqa                                     2.303844      -0.06181638
+    ## Nelder_Mead                                2.306500      -0.06201012
+    ## nlminbwrap                                 2.306317      -0.06219052
+    ## nmkbw                                      2.306555      -0.06222682
+    ## optimx.L-BFGS-B                            2.305349      -0.06116414
+    ## nloptwrap.NLOPT_LN_NELDERMEAD              2.306831      -0.06209217
+    ## nloptwrap.NLOPT_LN_BOBYQA                  2.306347      -0.05401377
+    ##                               M_Acc_Factorwrong vs right:Pronounthey vs he+she
+    ## bobyqa                                                               -1.298448
+    ## Nelder_Mead                                                          -1.293261
+    ## nlminbwrap                                                           -1.295887
+    ## nmkbw                                                                -1.293054
+    ## optimx.L-BFGS-B                                                      -1.294828
+    ## nloptwrap.NLOPT_LN_NELDERMEAD                                        -1.294981
+    ## nloptwrap.NLOPT_LN_BOBYQA                                            -1.289607
+    ##                               M_Acc_Factorwrong vs right:Pronounhe vs she
+    ## bobyqa                                                          0.3331351
+    ## Nelder_Mead                                                     0.3336713
+    ## nlminbwrap                                                      0.3342465
+    ## nmkbw                                                           0.3343293
+    ## optimx.L-BFGS-B                                                 0.3302678
+    ## nloptwrap.NLOPT_LN_NELDERMEAD                                   0.3339103
+    ## nloptwrap.NLOPT_LN_BOBYQA                                       0.3141189
+    ## 
+    ## $llik
+    ##                        bobyqa                   Nelder_Mead 
+    ##                     -538.2934                     -538.2907 
+    ##                    nlminbwrap                         nmkbw 
+    ##                     -538.2909                     -538.2907 
+    ##               optimx.L-BFGS-B nloptwrap.NLOPT_LN_NELDERMEAD 
+    ##                     -538.2911                     -538.2908 
+    ##     nloptwrap.NLOPT_LN_BOBYQA 
+    ##                     -538.2920 
+    ## 
+    ## $sdcor
+    ##                               SubjID.(Intercept)
+    ## bobyqa                                 0.8608571
+    ## Nelder_Mead                            0.8648093
+    ## nlminbwrap                             0.8655682
+    ## nmkbw                                  0.8647637
+    ## optimx.L-BFGS-B                        0.8665007
+    ## nloptwrap.NLOPT_LN_NELDERMEAD          0.8648929
+    ## nloptwrap.NLOPT_LN_BOBYQA              0.8641605
+    ## 
+    ## $theta
+    ##                               SubjID.(Intercept)
+    ## bobyqa                                 0.8608571
+    ## Nelder_Mead                            0.8648093
+    ## nlminbwrap                             0.8655682
+    ## nmkbw                                  0.8647637
+    ## optimx.L-BFGS-B                        0.8665007
+    ## nloptwrap.NLOPT_LN_NELDERMEAD          0.8648929
+    ## nloptwrap.NLOPT_LN_BOBYQA              0.8641605
+    ## 
+    ## $times
+    ##                               user.self sys.self elapsed user.child sys.child
+    ## bobyqa                             0.40        0    0.53         NA        NA
+    ## Nelder_Mead                        1.68        0    2.19         NA        NA
+    ## nlminbwrap                         0.85        0    1.11         NA        NA
+    ## nmkbw                              1.26        0    1.61         NA        NA
+    ## optimx.L-BFGS-B                    1.79        0    2.42         NA        NA
+    ## nloptwrap.NLOPT_LN_NELDERMEAD      1.39        0    1.99         NA        NA
+    ## nloptwrap.NLOPT_LN_BOBYQA          0.28        0    0.37         NA        NA
+    ## 
+    ## $feval
+    ##                        bobyqa                   Nelder_Mead 
+    ##                           205                           894 
+    ##                    nlminbwrap                         nmkbw 
+    ##                            NA                           615 
+    ##               optimx.L-BFGS-B nloptwrap.NLOPT_LN_NELDERMEAD 
+    ##                            74                           794 
+    ##     nloptwrap.NLOPT_LN_BOBYQA 
+    ##                            77 
+    ## 
+    ## attr(,"class")
+    ## [1] "summary.allFit"
+
+Most of the optimizers are throwing convergence errors, and all of the
+estimates are very consistent across optimizers. But the z values are
+weird and you shouldn’t get identical SEs, so the errors aren’t ok to
+ignore.
+
+Check by-item intercepts:
+
+``` r
+exp1b_m_mp_itemInt <- glmer(
+  formula = P_Acc ~ M_Acc_Factor * Pronoun + (1 | Name),
+  data = exp1b_d, family = binomial
+)
+```
+
+    ## boundary (singular) fit: see help('isSingular')
+
+``` r
+summary(exp1b_m_mp_itemInt)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: P_Acc ~ M_Acc_Factor * Pronoun + (1 | Name)
+    ##    Data: exp1b_d
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   1127.0   1162.7   -556.5   1113.0     1205 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.7434 -0.4330  0.3645  0.3793  2.3094 
+    ## 
+    ## Random effects:
+    ##  Groups Name        Variance Std.Dev.
+    ##  Name   (Intercept) 0        0       
+    ## Number of obs: 1212, groups:  Name, 12
+    ## 
+    ## Fixed effects:
+    ##                                                  Estimate Std. Error z value
+    ## (Intercept)                                       0.76675    0.08039   9.538
+    ## M_Acc_Factorwrong vs right                        1.49113    0.16078   9.274
+    ## Pronounthey vs he+she                             1.99066    0.16119  12.350
+    ## Pronounhe vs she                                 -0.04048    0.20880  -0.194
+    ## M_Acc_Factorwrong vs right:Pronounthey vs he+she -1.15555    0.32238  -3.584
+    ## M_Acc_Factorwrong vs right:Pronounhe vs she       0.24029    0.41762   0.575
+    ##                                                  Pr(>|z|)    
+    ## (Intercept)                                       < 2e-16 ***
+    ## M_Acc_Factorwrong vs right                        < 2e-16 ***
+    ## Pronounthey vs he+she                             < 2e-16 ***
+    ## Pronounhe vs she                                 0.846282    
+    ## M_Acc_Factorwrong vs right:Pronounthey vs he+she 0.000338 ***
+    ## M_Acc_Factorwrong vs right:Pronounhe vs she      0.565040    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) M_A_vr Prnvh+ Prnnvs M_vrvh
+    ## M_Acc_Fctvr -0.306                            
+    ## Prnnthyvsh+  0.188 -0.098                     
+    ## Prononhvssh  0.008  0.004  0.006              
+    ## M_A_Fvr:Pvh -0.098  0.188 -0.276  0.003       
+    ## M_A_Fvr:Pvs  0.004  0.008  0.003 -0.330  0.006
+    ## optimizer (Nelder_Mead) convergence code: 0 (OK)
+    ## boundary (singular) fit: see help('isSingular')
+
+``` r
+exp1b_opt_itemInt <- allFit(exp1b_m_mp_itemInt)
+```
+
+    ## bobyqa :
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## [OK]
+    ## Nelder_Mead :
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## [OK]
+    ## nlminbwrap :
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## [OK]
+    ## nmkbw :
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## [OK]
+    ## optimx.L-BFGS-B :
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## [OK]
+    ## nloptwrap.NLOPT_LN_NELDERMEAD :
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## [OK]
+    ## nloptwrap.NLOPT_LN_BOBYQA :
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## [OK]
+
+``` r
+summary(exp1b_opt_itemInt)
+```
+
+    ## $which.OK
+    ##                        bobyqa                   Nelder_Mead 
+    ##                          TRUE                          TRUE 
+    ##                    nlminbwrap                         nmkbw 
+    ##                          TRUE                          TRUE 
+    ##               optimx.L-BFGS-B nloptwrap.NLOPT_LN_NELDERMEAD 
+    ##                          TRUE                          TRUE 
+    ##     nloptwrap.NLOPT_LN_BOBYQA 
+    ##                          TRUE 
+    ## 
+    ## $msgs
+    ## $msgs$bobyqa
+    ## [1] "boundary (singular) fit: see help('isSingular')"
+    ## 
+    ## $msgs$Nelder_Mead
+    ## [1] "boundary (singular) fit: see help('isSingular')"
+    ## 
+    ## $msgs$nlminbwrap
+    ## [1] "boundary (singular) fit: see help('isSingular')"
+    ## 
+    ## $msgs$nmkbw
+    ## [1] "boundary (singular) fit: see help('isSingular')"
+    ## 
+    ## $msgs$`optimx.L-BFGS-B`
+    ## [1] "boundary (singular) fit: see help('isSingular')"
+    ## 
+    ## $msgs$nloptwrap.NLOPT_LN_NELDERMEAD
+    ## [1] "boundary (singular) fit: see help('isSingular')"
+    ## 
+    ## $msgs$nloptwrap.NLOPT_LN_BOBYQA
+    ## [1] "boundary (singular) fit: see help('isSingular')"
+    ## 
+    ## 
+    ## $fixef
+    ##                               (Intercept) M_Acc_Factorwrong vs right
+    ## bobyqa                          0.7667544                   1.491135
+    ## Nelder_Mead                     0.7667545                   1.491135
+    ## nlminbwrap                      0.7667545                   1.491135
+    ## nmkbw                           0.7667545                   1.491135
+    ## optimx.L-BFGS-B                 0.7667546                   1.491135
+    ## nloptwrap.NLOPT_LN_NELDERMEAD   0.7667545                   1.491135
+    ## nloptwrap.NLOPT_LN_BOBYQA       0.7667545                   1.491135
+    ##                               Pronounthey vs he+she Pronounhe vs she
+    ## bobyqa                                     1.990657      -0.04047981
+    ## Nelder_Mead                                1.990657      -0.04047961
+    ## nlminbwrap                                 1.990657      -0.04047946
+    ## nmkbw                                      1.990657      -0.04047961
+    ## optimx.L-BFGS-B                            1.990657      -0.04047961
+    ## nloptwrap.NLOPT_LN_NELDERMEAD              1.990657      -0.04047961
+    ## nloptwrap.NLOPT_LN_BOBYQA                  1.990657      -0.04047961
+    ##                               M_Acc_Factorwrong vs right:Pronounthey vs he+she
+    ## bobyqa                                                               -1.155546
+    ## Nelder_Mead                                                          -1.155546
+    ## nlminbwrap                                                           -1.155546
+    ## nmkbw                                                                -1.155546
+    ## optimx.L-BFGS-B                                                      -1.155546
+    ## nloptwrap.NLOPT_LN_NELDERMEAD                                        -1.155546
+    ## nloptwrap.NLOPT_LN_BOBYQA                                            -1.155546
+    ##                               M_Acc_Factorwrong vs right:Pronounhe vs she
+    ## bobyqa                                                          0.2402873
+    ## Nelder_Mead                                                     0.2402872
+    ## nlminbwrap                                                      0.2402873
+    ## nmkbw                                                           0.2402872
+    ## optimx.L-BFGS-B                                                 0.2402872
+    ## nloptwrap.NLOPT_LN_NELDERMEAD                                   0.2402872
+    ## nloptwrap.NLOPT_LN_BOBYQA                                       0.2402872
+    ## 
+    ## $llik
+    ##                        bobyqa                   Nelder_Mead 
+    ##                     -556.4816                     -556.4816 
+    ##                    nlminbwrap                         nmkbw 
+    ##                     -556.4816                     -556.4816 
+    ##               optimx.L-BFGS-B nloptwrap.NLOPT_LN_NELDERMEAD 
+    ##                     -556.4816                     -556.4816 
+    ##     nloptwrap.NLOPT_LN_BOBYQA 
+    ##                     -556.4816 
+    ## 
+    ## $sdcor
+    ##                               Name.(Intercept)
+    ## bobyqa                            0.000000e+00
+    ## Nelder_Mead                       0.000000e+00
+    ## nlminbwrap                        2.061502e-09
+    ## nmkbw                             1.540609e-07
+    ## optimx.L-BFGS-B                   0.000000e+00
+    ## nloptwrap.NLOPT_LN_NELDERMEAD     0.000000e+00
+    ## nloptwrap.NLOPT_LN_BOBYQA         0.000000e+00
+    ## 
+    ## $theta
+    ##                               Name.(Intercept)
+    ## bobyqa                            0.000000e+00
+    ## Nelder_Mead                       0.000000e+00
+    ## nlminbwrap                        2.061502e-09
+    ## nmkbw                             1.540609e-07
+    ## optimx.L-BFGS-B                   0.000000e+00
+    ## nloptwrap.NLOPT_LN_NELDERMEAD     0.000000e+00
+    ## nloptwrap.NLOPT_LN_BOBYQA         0.000000e+00
+    ## 
+    ## $times
+    ##                               user.self sys.self elapsed user.child sys.child
+    ## bobyqa                             0.25        0    0.27         NA        NA
+    ## Nelder_Mead                        0.39        0    0.52         NA        NA
+    ## nlminbwrap                         0.25        0    0.27         NA        NA
+    ## nmkbw                              0.58        0    0.67         NA        NA
+    ## optimx.L-BFGS-B                    0.94        0    1.03         NA        NA
+    ## nloptwrap.NLOPT_LN_NELDERMEAD      0.48        0    0.55         NA        NA
+    ## nloptwrap.NLOPT_LN_BOBYQA          0.21        0    0.30         NA        NA
+    ## 
+    ## $feval
+    ##                        bobyqa                   Nelder_Mead 
+    ##                            33                           201 
+    ##                    nlminbwrap                         nmkbw 
+    ##                            NA                           270 
+    ##               optimx.L-BFGS-B nloptwrap.NLOPT_LN_NELDERMEAD 
+    ##                             6                           218 
+    ##     nloptwrap.NLOPT_LN_BOBYQA 
+    ##                            48 
+    ## 
+    ## attr(,"class")
+    ## [1] "summary.allFit"
+
+The by-item intercept model isn’t giving impossible results, but two of
+the optimizers have very different estimates for the random intercepts
+than the rest of them, so let’s just stick with the original model:
+
+``` r
+summary(exp1b_m_mp_buildmer)
+```
+
+    ## 
+    ## Call:
+    ## stats::glm(formula = P_Acc ~ 1 + Pronoun + M_Acc_Factor + M_Acc_Factor:Pronoun, 
+    ##     family = binomial, data = exp1b_d)
+    ## 
+    ## Deviance Residuals: 
+    ##     Min       1Q   Median       3Q      Max  
+    ## -2.0703  -0.5863   0.4995   0.5185   1.9214  
+    ## 
+    ## Coefficients:
+    ##                                                  Estimate Std. Error z value
+    ## (Intercept)                                       0.76675    0.08039   9.538
+    ## Pronounthey vs he+she                             1.99066    0.16120  12.349
+    ## Pronounhe vs she                                 -0.04048    0.20880  -0.194
+    ## M_Acc_Factorwrong vs right                        1.49113    0.16078   9.274
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right -1.15555    0.32239  -3.584
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right       0.24029    0.41760   0.575
+    ##                                                  Pr(>|z|)    
+    ## (Intercept)                                       < 2e-16 ***
+    ## Pronounthey vs he+she                             < 2e-16 ***
+    ## Pronounhe vs she                                 0.846278    
+    ## M_Acc_Factorwrong vs right                        < 2e-16 ***
+    ## Pronounthey vs he+she:M_Acc_Factorwrong vs right 0.000338 ***
+    ## Pronounhe vs she:M_Acc_Factorwrong vs right      0.565016    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## (Dispersion parameter for binomial family taken to be 1)
+    ## 
+    ##     Null deviance: 1496.3  on 1211  degrees of freedom
+    ## Residual deviance: 1113.0  on 1206  degrees of freedom
+    ## AIC: 1125
+    ## 
+    ## Number of Fisher Scoring iterations: 4
+
+``` r
+# memory accuracy
+exp1b_m_mp_buildmer@model %>%
+  get_parameters() %>%
+  filter(Parameter == "M_Acc_Factorwrong vs right") %>%
+  pull(Estimate) %>%
+  exp()
+```
+
+    ## [1] 4.442133
+
+``` r
+# they/them vs. he/him + she/her * memory accuracy
+exp1b_m_mp_buildmer@model %>%
+  get_parameters() %>%
+  filter(Parameter == "Pronounthey vs he+she:M_Acc_Factorwrong vs right") %>%
+  pull(Estimate) %>%
+  exp()
+```
+
+    ## [1] 0.3148857
+
+- The effect of memory accuracy is significant (p\<.001), such that
+  participants are 4.44x more likely to get the production right if they
+  got the memory right.
+
+- Significant interaction between pronoun type (they/them vs. he/him +
+  she/her) and memory accuracy (p\<.05) (odds 0.31). The relative
+  difficulty of they/them was attenuated when the participant had
+  correctly remembered the character’s pronoun during the memory phase
+  of the task.
 
 ``` r
 exp(1.49113)  #memory accuracy

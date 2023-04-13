@@ -956,346 +956,468 @@ mp_acc
     ## 12 they/them ProdOnly          0.0555
 
 ### Model
+``` r
+exp2_d %<>% mutate(M_Acc_Factor = as.factor(M_Acc))
+
+contrasts(exp2_d$M_Acc_Factor) <- cbind("_Wrong_Right" = c(-0.5, +0.5))
+contrasts(exp2_d$M_Acc_Factor)
+```
+
+    ##   _Wrong_Right
+    ## 0         -0.5
+    ## 1          0.5
 
 Maximal model has interactions between Pronoun (2 contrasts), Memory
 Accuracy, PSA, and Biographies, then random intercepts by item.
 
 ``` r
-model_mp_full <- P_Acc ~ Pronoun * PSA * Biographies * M_Acc + 
-                (Pronoun|Participant) + (Pronoun|Name)
-
-model_mp <- buildmer(model_mp_full, d, 
-                     family="binomial", direction=c("order"))
+exp2_m_mp <- buildmer(
+  formula = P_Acc ~ Pronoun * PSA * Biographies * M_Acc_Factor +
+    (Pronoun | Participant) + (Pronoun | Name),
+  data = exp2_d, family = binomial,
+  buildmerControl(direction = "order")
+)
 ```
 
     ## Determining predictor order
 
     ## Fitting via glm: P_Acc ~ 1
 
-    ## Currently evaluating LRT for: Biographies, M_Acc, Pronoun, PSA
-
-    ## Fitting via glm: P_Acc ~ 1 + Biographies
-
-    ## Fitting via glm: P_Acc ~ 1 + M_Acc
+    ## Currently evaluating LRT for: Pronoun, PSA, Biographies, M_Acc_Factor
 
     ## Fitting via glm: P_Acc ~ 1 + Pronoun
 
     ## Fitting via glm: P_Acc ~ 1 + PSA
 
+    ## Fitting via glm: P_Acc ~ 1 + Biographies
+
+    ## Fitting via glm: P_Acc ~ 1 + M_Acc_Factor
+
     ## Updating formula: P_Acc ~ 1 + Pronoun
 
-    ## Currently evaluating LRT for: Biographies, M_Acc, PSA
-
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + Biographies
-
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc
+    ## Currently evaluating LRT for: PSA, Biographies, M_Acc_Factor
 
     ## Fitting via glm: P_Acc ~ 1 + Pronoun + PSA
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + Biographies
 
-    ## Currently evaluating LRT for: Biographies, Pronoun:M_Acc, PSA
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + Biographies
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + Pronoun:M_Acc
+    ## Currently evaluating LRT for: PSA, Biographies, Pronoun:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + Biographies
 
-    ## Currently evaluating LRT for: Biographies, Pronoun:M_Acc, Pronoun:PSA,
-    ##     PSA:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor +
+    ##     Pronoun:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Biographies
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:M_Acc
+    ## Currently evaluating LRT for: Pronoun:PSA, Biographies,
+    ##     Pronoun:M_Acc_Factor, PSA:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + PSA:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Biographies
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:M_Acc_Factor
 
-    ## Currently evaluating LRT for: Biographies, Pronoun:M_Acc, PSA:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     PSA:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Biographies
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc
+    ## Currently evaluating LRT for: Biographies, Pronoun:M_Acc_Factor,
+    ##     PSA:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     PSA:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Biographies
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor
 
-    ## Currently evaluating LRT for: Biographies, PSA:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + PSA:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + Biographies
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + PSA:M_Acc
+    ## Currently evaluating LRT for: Biographies, PSA:M_Acc_Factor
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + PSA:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + Biographies
 
-    ## Currently evaluating LRT for: Biographies, Pronoun:PSA:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + PSA:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Biographies
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + PSA:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:PSA:M_Acc
+    ## Currently evaluating LRT for: Biographies, Pronoun:PSA:M_Acc_Factor
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:PSA:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA + Biographies
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:PSA:M_Acc_Factor
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:PSA:M_Acc_Factor
 
     ## Currently evaluating LRT for: Biographies
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies
 
-    ## Currently evaluating LRT for: Biographies:M_Acc, Pronoun:Biographies,
-    ##     PSA:Biographies
+    ## Currently evaluating LRT for: Pronoun:Biographies, PSA:Biographies,
+    ##     Biographies:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     Biographies:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + Pronoun:Biographies
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     Pronoun:Biographies
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + Biographies:M_Acc_Factor
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies
-
-    ## Currently evaluating LRT for: Biographies:M_Acc, Pronoun:Biographies
-
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + Biographies:M_Acc
-
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + Pronoun:Biographies
-
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + Biographies:M_Acc
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies
 
     ## Currently evaluating LRT for: Pronoun:Biographies,
-    ##     PSA:Biographies:M_Acc
+    ##     Biographies:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + Pronoun:Biographies
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     Pronoun:Biographies
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + PSA:Biographies:M_Acc
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     Biographies:M_Acc_Factor
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + PSA:Biographies:M_Acc
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     Biographies:M_Acc_Factor
+
+    ## Currently evaluating LRT for: Pronoun:Biographies,
+    ##     PSA:Biographies:M_Acc_Factor
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + Pronoun:Biographies
+
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + PSA:Biographies:M_Acc_Factor
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + PSA:Biographies:M_Acc_Factor
 
     ## Currently evaluating LRT for: Pronoun:Biographies
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
     ##     Pronoun:Biographies
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
     ##     Pronoun:Biographies
 
-    ## Currently evaluating LRT for: Pronoun:Biographies:M_Acc,
-    ##     Pronoun:PSA:Biographies
+    ## Currently evaluating LRT for: Pronoun:PSA:Biographies,
+    ##     Pronoun:Biographies:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
-    ##     Pronoun:Biographies + Pronoun:Biographies:M_Acc
-
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
     ##     Pronoun:Biographies + Pronoun:PSA:Biographies
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
+    ##     Pronoun:Biographies + Pronoun:Biographies:M_Acc_Factor
+
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
     ##     Pronoun:Biographies + Pronoun:PSA:Biographies
 
-    ## Currently evaluating LRT for: Pronoun:Biographies:M_Acc
+    ## Currently evaluating LRT for: Pronoun:Biographies:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
     ##     Pronoun:Biographies + Pronoun:PSA:Biographies +
-    ##     Pronoun:Biographies:M_Acc
+    ##     Pronoun:Biographies:M_Acc_Factor
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
     ##     Pronoun:Biographies + Pronoun:PSA:Biographies +
-    ##     Pronoun:Biographies:M_Acc
+    ##     Pronoun:Biographies:M_Acc_Factor
 
-    ## Currently evaluating LRT for: Pronoun:PSA:Biographies:M_Acc
+    ## Currently evaluating LRT for: Pronoun:PSA:Biographies:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
     ##     Pronoun:Biographies + Pronoun:PSA:Biographies +
-    ##     Pronoun:M_Acc:Biographies + Pronoun:PSA:Biographies:M_Acc
+    ##     Pronoun:M_Acc_Factor:Biographies +
+    ##     Pronoun:PSA:Biographies:M_Acc_Factor
 
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
     ##     Pronoun:Biographies + Pronoun:PSA:Biographies +
-    ##     Pronoun:M_Acc:Biographies + Pronoun:PSA:Biographies:M_Acc
+    ##     Pronoun:M_Acc_Factor:Biographies +
+    ##     Pronoun:PSA:Biographies:M_Acc_Factor
 
-    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
+    ## Fitting via glm: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA
+    ##     + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
     ##     Pronoun:Biographies + Pronoun:PSA:Biographies +
-    ##     Pronoun:M_Acc:Biographies + Pronoun:PSA:Biographies:M_Acc
+    ##     Pronoun:M_Acc_Factor:Biographies +
+    ##     Pronoun:PSA:Biographies:M_Acc_Factor
 
-    ## Currently evaluating LRT for: 1 | Name, 1 | Participant
+    ## Currently evaluating LRT for: 1 | Participant, 1 | Name
 
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc + PSA +
-    ##     Pronoun:PSA + Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA +
-    ##     Biographies + PSA:Biographies + M_Acc:Biographies +
-    ##     M_Acc:PSA:Biographies + Pronoun:Biographies +
-    ##     Pronoun:PSA:Biographies + Pronoun:M_Acc:Biographies +
-    ##     Pronoun:M_Acc:PSA:Biographies + (1 | Name)
-
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc + PSA +
-    ##     Pronoun:PSA + Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA +
-    ##     Biographies + PSA:Biographies + M_Acc:Biographies +
-    ##     M_Acc:PSA:Biographies + Pronoun:Biographies +
-    ##     Pronoun:PSA:Biographies + Pronoun:M_Acc:Biographies +
-    ##     Pronoun:M_Acc:PSA:Biographies + (1 | Participant)
-
-    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA +
-    ##     Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies +
-    ##     PSA:Biographies + M_Acc:Biographies + M_Acc:PSA:Biographies +
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
     ##     Pronoun:Biographies + Pronoun:PSA:Biographies +
-    ##     Pronoun:M_Acc:Biographies + Pronoun:M_Acc:PSA:Biographies + (1 |
-    ##     Name)
+    ##     Pronoun:M_Acc_Factor:Biographies +
+    ##     Pronoun:M_Acc_Factor:PSA:Biographies + (1 | Participant)
 
-    ## Currently evaluating LRT for: Pronoun | Name, 1 | Participant
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
+    ##     Pronoun:Biographies + Pronoun:PSA:Biographies +
+    ##     Pronoun:M_Acc_Factor:Biographies +
+    ##     Pronoun:M_Acc_Factor:PSA:Biographies + (1 | Name)
 
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc + PSA +
-    ##     Pronoun:PSA + Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA +
-    ##     Biographies + PSA:Biographies + M_Acc:Biographies +
-    ##     M_Acc:PSA:Biographies + Pronoun:Biographies +
-    ##     Pronoun:PSA:Biographies + Pronoun:M_Acc:Biographies +
-    ##     Pronoun:M_Acc:PSA:Biographies + (1 + Pronoun | Name)
+    ## Updating formula: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
+    ##     Pronoun:Biographies + Pronoun:PSA:Biographies +
+    ##     Pronoun:M_Acc_Factor:Biographies +
+    ##     Pronoun:M_Acc_Factor:PSA:Biographies + (1 | Name)
+
+    ## Currently evaluating LRT for: 1 | Participant, Pronoun | Name
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
+    ##     Pronoun:Biographies + Pronoun:PSA:Biographies +
+    ##     Pronoun:M_Acc_Factor:Biographies +
+    ##     Pronoun:M_Acc_Factor:PSA:Biographies + (1 | Name) + (1 |
+    ##     Participant)
+
+    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA +
+    ##     Pronoun:PSA + Pronoun:M_Acc_Factor + M_Acc_Factor:PSA +
+    ##     Pronoun:M_Acc_Factor:PSA + Biographies + PSA:Biographies +
+    ##     M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +
+    ##     Pronoun:Biographies + Pronoun:PSA:Biographies +
+    ##     Pronoun:M_Acc_Factor:Biographies +
+    ##     Pronoun:M_Acc_Factor:PSA:Biographies + (1 + Pronoun | Name)
 
     ## boundary (singular) fit: see help('isSingular')
 
-    ## Fitting via glmer, with ML: P_Acc ~ 1 + Pronoun + M_Acc + PSA +
-    ##     Pronoun:PSA + Pronoun:M_Acc + M_Acc:PSA + Pronoun:M_Acc:PSA +
-    ##     Biographies + PSA:Biographies + M_Acc:Biographies +
-    ##     M_Acc:PSA:Biographies + Pronoun:Biographies +
-    ##     Pronoun:PSA:Biographies + Pronoun:M_Acc:Biographies +
-    ##     Pronoun:M_Acc:PSA:Biographies + (1 | Name) + (1 | Participant)
-
     ## Ending the ordering procedure due to having reached the maximal
     ##     feasible model - all higher models failed to converge. The types of
-    ##     convergence failure are: Singular fit lme4 reports not having
-    ##     converged (-1)
+    ##     convergence failure are: Optimizer reports not having finished (4)
+    ##     Singular fit
 
 ``` r
-summary(model_mp)
+summary(exp2_m_mp)
 ```
 
     ## Generalized linear mixed model fit by maximum likelihood (Laplace
     ##   Approximation) (p-values based on Wald z-scores) [glmerMod]
     ##  Family: binomial  ( logit )
-    ## Formula: P_Acc ~ 1 + Pronoun + M_Acc + PSA + Pronoun:PSA + Pronoun:M_Acc +  
-    ##     M_Acc:PSA + Pronoun:M_Acc:PSA + Biographies + PSA:Biographies +  
-    ##     M_Acc:Biographies + M_Acc:PSA:Biographies + Pronoun:Biographies +  
-    ##     Pronoun:PSA:Biographies + Pronoun:M_Acc:Biographies + Pronoun:M_Acc:PSA:Biographies +  
-    ##     (1 | Name)
-    ##    Data: d
+    ## Formula: 
+    ## P_Acc ~ 1 + Pronoun + M_Acc_Factor + PSA + Pronoun:PSA + Pronoun:M_Acc_Factor +  
+    ##     M_Acc_Factor:PSA + Pronoun:M_Acc_Factor:PSA + Biographies +  
+    ##     PSA:Biographies + M_Acc_Factor:Biographies + M_Acc_Factor:PSA:Biographies +  
+    ##     Pronoun:Biographies + Pronoun:PSA:Biographies + Pronoun:M_Acc_Factor:Biographies +  
+    ##     Pronoun:M_Acc_Factor:PSA:Biographies + (1 | Name)
+    ##    Data: exp2_d
     ## 
     ##      AIC      BIC   logLik deviance df.resid 
     ##   3384.0   3540.3  -1667.0   3334.0     3815 
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -3.6071 -0.4348  0.3461  0.4641  4.9870 
+    ## -3.6071 -0.4348  0.3462  0.4641  4.9870 
     ## 
     ## Random effects:
     ##  Groups Name        Variance Std.Dev.
-    ##  Name   (Intercept) 0.003596 0.05996 
+    ##  Name   (Intercept) 0.003593 0.05995 
     ## Number of obs: 3840, groups:  Name, 12
     ## 
     ## Fixed effects:
-    ##                                                 Estimate Std. Error  z value
-    ## (Intercept)                                      0.10688    0.08987  1.18937
-    ## Pronoun_T_HS                                     3.33124    0.18516 17.99081
-    ## Pronoun_H_S                                     -0.46920    0.22284 -2.10556
-    ## M_Acc                                            0.83019    0.10374  8.00239
-    ## PSA_GenLang                                     -0.04541    0.17616 -0.25777
-    ## Biographies_They                                 0.04027    0.17617  0.22858
-    ## Pronoun_T_HS:PSA_GenLang                        -1.77795    0.36947 -4.81210
-    ## Pronoun_H_S:PSA_GenLang                         -0.12067    0.44046 -0.27396
-    ## Pronoun_T_HS:M_Acc                              -0.40183    0.21858 -1.83842
-    ## Pronoun_H_S:M_Acc                                0.25503    0.25851  0.98651
-    ## M_Acc:PSA_GenLang                                0.23980    0.20735  1.15653
-    ## PSA_GenLang:Biographies_They                     0.16487    0.35233  0.46794
-    ## M_Acc:Biographies_They                          -0.11428    0.20738 -0.55105
-    ## Pronoun_T_HS:Biographies_They                   -0.71912    0.36942 -1.94664
-    ## Pronoun_H_S:Biographies_They                     0.36914    0.44050  0.83800
-    ## Pronoun_T_HS:M_Acc:PSA_GenLang                  -0.23686    0.43705 -0.54195
-    ## Pronoun_H_S:M_Acc:PSA_GenLang                    0.48046    0.51606  0.93101
-    ## M_Acc:PSA_GenLang:Biographies_They               0.42514    0.41472  1.02512
-    ## Pronoun_T_HS:PSA_GenLang:Biographies_They        1.96223    0.74028  2.65066
-    ## Pronoun_H_S:PSA_GenLang:Biographies_They         1.04670    0.88132  1.18765
-    ## Pronoun_T_HS:M_Acc:Biographies_They              0.83020    0.43694  1.90005
-    ## Pronoun_H_S:M_Acc:Biographies_They              -0.38998    0.51604 -0.75571
-    ## Pronoun_T_HS:M_Acc:PSA_GenLang:Biographies_They -1.52764    0.87578 -1.74431
-    ## Pronoun_H_S:M_Acc:PSA_GenLang:Biographies_They  -1.20247    1.03266 -1.16445
-    ##                                                 Pr(>|z|) Pr(>|t|)    
-    ## (Intercept)                                        0.234  0.23429    
-    ## Pronoun_T_HS                                       0.000  < 2e-16 ***
-    ## Pronoun_H_S                                        0.035  0.03524 *  
-    ## M_Acc                                              0.000 1.22e-15 ***
-    ## PSA_GenLang                                        0.797  0.79659    
-    ## Biographies_They                                   0.819  0.81919    
-    ## Pronoun_T_HS:PSA_GenLang                           0.000 1.49e-06 ***
-    ## Pronoun_H_S:PSA_GenLang                            0.784  0.78411    
-    ## Pronoun_T_HS:M_Acc                                 0.066  0.06600 .  
-    ## Pronoun_H_S:M_Acc                                  0.324  0.32388    
-    ## M_Acc:PSA_GenLang                                  0.247  0.24746    
-    ## PSA_GenLang:Biographies_They                       0.640  0.63983    
-    ## M_Acc:Biographies_They                             0.582  0.58160    
-    ## Pronoun_T_HS:Biographies_They                      0.052  0.05158 .  
-    ## Pronoun_H_S:Biographies_They                       0.402  0.40203    
-    ## Pronoun_T_HS:M_Acc:PSA_GenLang                     0.588  0.58785    
-    ## Pronoun_H_S:M_Acc:PSA_GenLang                      0.352  0.35185    
-    ## M_Acc:PSA_GenLang:Biographies_They                 0.305  0.30531    
-    ## Pronoun_T_HS:PSA_GenLang:Biographies_They          0.008  0.00803 ** 
-    ## Pronoun_H_S:PSA_GenLang:Biographies_They           0.235  0.23497    
-    ## Pronoun_T_HS:M_Acc:Biographies_They                0.057  0.05743 .  
-    ## Pronoun_H_S:M_Acc:Biographies_They                 0.450  0.44982    
-    ## Pronoun_T_HS:M_Acc:PSA_GenLang:Biographies_They    0.081  0.08111 .  
-    ## Pronoun_H_S:M_Acc:PSA_GenLang:Biographies_They     0.244  0.24424    
+    ##                                                                    Estimate
+    ## (Intercept)                                                         0.52197
+    ## Pronoun_T_HS                                                        3.13031
+    ## Pronoun_H_S                                                        -0.34168
+    ## M_Acc_Factor_Wrong_Right                                            0.83020
+    ## PSA_GenLang                                                         0.07450
+    ## Biographies_They                                                   -0.01688
+    ## Pronoun_T_HS:PSA_GenLang                                           -1.89636
+    ## Pronoun_H_S:PSA_GenLang                                             0.11965
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right                              -0.40185
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right                                0.25505
+    ## M_Acc_Factor_Wrong_Right:PSA_GenLang                                0.23978
+    ## PSA_GenLang:Biographies_They                                        0.37744
+    ## M_Acc_Factor_Wrong_Right:Biographies_They                          -0.11428
+    ## Pronoun_T_HS:Biographies_They                                      -0.30400
+    ## Pronoun_H_S:Biographies_They                                        0.17425
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:PSA_GenLang                  -0.23687
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:PSA_GenLang                    0.48030
+    ## M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They               0.42522
+    ## Pronoun_T_HS:PSA_GenLang:Biographies_They                           1.19830
+    ## Pronoun_H_S:PSA_GenLang:Biographies_They                            0.44550
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:Biographies_They              0.83018
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:Biographies_They              -0.39024
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They -1.52736
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They  -1.20271
+    ##                                                                    Std. Error
+    ## (Intercept)                                                           0.05470
+    ## Pronoun_T_HS                                                          0.10973
+    ## Pronoun_H_S                                                           0.13348
+    ## M_Acc_Factor_Wrong_Right                                              0.10374
+    ## PSA_GenLang                                                           0.10367
+    ## Biographies_They                                                      0.10366
+    ## Pronoun_T_HS:PSA_GenLang                                              0.21855
+    ## Pronoun_H_S:PSA_GenLang                                               0.25801
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right                                 0.21858
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right                                  0.25853
+    ## M_Acc_Factor_Wrong_Right:PSA_GenLang                                  0.20736
+    ## PSA_GenLang:Biographies_They                                          0.20735
+    ## M_Acc_Factor_Wrong_Right:Biographies_They                             0.20739
+    ## Pronoun_T_HS:Biographies_They                                         0.21861
+    ## Pronoun_H_S:Biographies_They                                          0.25806
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:PSA_GenLang                     0.43706
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:PSA_GenLang                      0.51601
+    ## M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They                 0.41475
+    ## Pronoun_T_HS:PSA_GenLang:Biographies_They                             0.43732
+    ## Pronoun_H_S:PSA_GenLang:Biographies_They                              0.51627
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:Biographies_They                0.43705
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:Biographies_They                 0.51610
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They    0.87560
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They     1.03296
+    ##                                                                     z value
+    ## (Intercept)                                                         9.54194
+    ## Pronoun_T_HS                                                       28.52659
+    ## Pronoun_H_S                                                        -2.55973
+    ## M_Acc_Factor_Wrong_Right                                            8.00232
+    ## PSA_GenLang                                                         0.71867
+    ## Biographies_They                                                   -0.16279
+    ## Pronoun_T_HS:PSA_GenLang                                           -8.67711
+    ## Pronoun_H_S:PSA_GenLang                                             0.46375
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right                              -1.83842
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right                                0.98655
+    ## M_Acc_Factor_Wrong_Right:PSA_GenLang                                1.15634
+    ## PSA_GenLang:Biographies_They                                        1.82034
+    ## M_Acc_Factor_Wrong_Right:Biographies_They                          -0.55103
+    ## Pronoun_T_HS:Biographies_They                                      -1.39060
+    ## Pronoun_H_S:Biographies_They                                        0.67524
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:PSA_GenLang                  -0.54195
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:PSA_GenLang                    0.93079
+    ## M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They               1.02524
+    ## Pronoun_T_HS:PSA_GenLang:Biographies_They                           2.74009
+    ## Pronoun_H_S:PSA_GenLang:Biographies_They                            0.86293
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:Biographies_They              1.89948
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:Biographies_They              -0.75614
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They -1.74435
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They  -1.16433
+    ##                                                                    Pr(>|z|)
+    ## (Intercept)                                                           0.000
+    ## Pronoun_T_HS                                                          0.000
+    ## Pronoun_H_S                                                           0.010
+    ## M_Acc_Factor_Wrong_Right                                              0.000
+    ## PSA_GenLang                                                           0.472
+    ## Biographies_They                                                      0.871
+    ## Pronoun_T_HS:PSA_GenLang                                              0.000
+    ## Pronoun_H_S:PSA_GenLang                                               0.643
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right                                 0.066
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right                                  0.324
+    ## M_Acc_Factor_Wrong_Right:PSA_GenLang                                  0.248
+    ## PSA_GenLang:Biographies_They                                          0.069
+    ## M_Acc_Factor_Wrong_Right:Biographies_They                             0.582
+    ## Pronoun_T_HS:Biographies_They                                         0.164
+    ## Pronoun_H_S:Biographies_They                                          0.500
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:PSA_GenLang                     0.588
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:PSA_GenLang                      0.352
+    ## M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They                 0.305
+    ## Pronoun_T_HS:PSA_GenLang:Biographies_They                             0.006
+    ## Pronoun_H_S:PSA_GenLang:Biographies_They                              0.388
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:Biographies_They                0.058
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:Biographies_They                 0.450
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They    0.081
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They     0.244
+    ##                                                                    Pr(>|t|)    
+    ## (Intercept)                                                         < 2e-16 ***
+    ## Pronoun_T_HS                                                        < 2e-16 ***
+    ## Pronoun_H_S                                                         0.01048 *  
+    ## M_Acc_Factor_Wrong_Right                                           1.22e-15 ***
+    ## PSA_GenLang                                                         0.47235    
+    ## Biographies_They                                                    0.87069    
+    ## Pronoun_T_HS:PSA_GenLang                                            < 2e-16 ***
+    ## Pronoun_H_S:PSA_GenLang                                             0.64283    
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right                               0.06600 .  
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right                                0.32386    
+    ## M_Acc_Factor_Wrong_Right:PSA_GenLang                                0.24754    
+    ## PSA_GenLang:Biographies_They                                        0.06871 .  
+    ## M_Acc_Factor_Wrong_Right:Biographies_They                           0.58161    
+    ## Pronoun_T_HS:Biographies_They                                       0.16435    
+    ## Pronoun_H_S:Biographies_They                                        0.49952    
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:PSA_GenLang                   0.58785    
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:PSA_GenLang                    0.35196    
+    ## M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They               0.30525    
+    ## Pronoun_T_HS:PSA_GenLang:Biographies_They                           0.00614 ** 
+    ## Pronoun_H_S:PSA_GenLang:Biographies_They                            0.38818    
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:Biographies_They              0.05750 .  
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:Biographies_They               0.44957    
+    ## Pronoun_T_HS:M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They  0.08110 .  
+    ## Pronoun_H_S:M_Acc_Factor_Wrong_Right:PSA_GenLang:Biographies_They   0.24429    
     ## ---
     ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
 

@@ -210,19 +210,56 @@ accuracy. Otherwise the same model specifications as the first two. The
 maximal model includes random intercepts by participant.
 
 ```{r}
-model_mp_full <- P_Acc ~ M_Acc * Pronoun + 
-                 (1 + Pronoun|SubjID) + (1 + Pronoun|Name)
 
-model_mp <- buildmer(model_mp_full, data=mp, family='binomial', 
-                     direction=c('order'))
-summary(model_mp)
+## Model
+
+```{r}
+#| label: exp1-mean-center-acc
+
+exp1a_d %<>% mutate(M_Acc_Factor = as.factor(M_Acc))
+contrasts(exp1a_d$M_Acc_Factor) <- cbind("wrong vs right" = c(-0.5, +0.5))
+contrasts(exp1a_d$M_Acc_Factor)
+```
+
+Model predicting production accuracy with pronoun type and memory accuracy. Otherwise the same model specifications as the first two. The maximal model includes random intercepts by participant.
+
+```{r}
+#| label: exp1-memory-production-model
+#| cache: true
+
+exp1a_m_mp <- buildmer(
+  formula = P_Acc ~ M_Acc_Factor * Pronoun +
+    (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1a_d, family = binomial,
+  buildmerControl(direction = "order")
+)
+
+summary(exp1a_m_mp)
 ```
 
 Convert to odds:
 
 ```{r}
-exp(1.24520) #memory accuracy
-exp(-0.81954) #they/them vs. he/him + she/her * memory accuracy
+#| label: exp1-memory-production-OR
+
+# memory accuracy
+exp1a_m_mp@model %>%
+  get_parameters() %>%
+  filter(Parameter == "M_Acc_Factorwrong vs right") %>%
+  pull(Estimate) %>%
+  exp()
+
+# they/them vs. he/him + she/her * memory accuracy
+exp1a_m_mp@model %>%
+  get_parameters() %>%
+  filter(Parameter == "Pronounthey vs he+she:M_Acc_Factorwrong vs right") %>%
+  pull(Estimate) %>%
+  exp()
+```
+
+-   The effect of memory accuracy is significant (p\<.001), such that participants are 3.47x more likely to get the production right if they got the memory right.
+
+-   Significant interaction between pronoun type (they/them vs. he/him + she/her) and memory accuracy (p\<.05) (odds 0.44). The relative difficulty of they/them was attenuated when the participant had correctly remembered the character's pronoun during the memory phase of the task.
 ```
 
 -   The effect of memory accuracy is significant (p\<.001), such that
