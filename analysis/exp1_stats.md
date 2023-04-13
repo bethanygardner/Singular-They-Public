@@ -728,6 +728,268 @@ exp1a_m_mp@model %>%
   correctly remembered the character’s pronoun during the memory phase
   of the task.
 
+# Compare Memory and Production
+
+Compare accuracy between memory and production tasks by mean-center
+effects coding Task:
+
+``` r
+exp1a_d_task <- exp1a_d_all %>%  # memory + prod in long format
+  filter(Task != "introduction") %>%
+  filter(M_Type == "pronoun" | M_Type == "") %>%
+  select(Task, Pronoun, Name, M_Acc, P_Acc, SubjID, Name) %>%
+  mutate(.keep = c("unused"), Acc = case_when(
+    !is.na(M_Acc) ~ M_Acc,  # group into 1 accuracy variable
+    !is.na(P_Acc) ~ P_Acc
+  )) %>%
+  mutate(  # add pronoun dummy code variables
+    Pronoun_They0  = ifelse(Pronoun == "they/them", 0, 1),
+    Pronoun_HeShe0 = ifelse(Pronoun != "they/them", 0, 1)
+  )
+
+# Mean-center effects code Task
+exp1a_d_task$Task %<>% factor()
+contrasts(exp1a_d_task$Task) <- cbind(
+  "mem vs prod" = c(-.5, +.5)
+)
+contrasts(exp1a_d_task$Task)
+```
+
+    ##            mem vs prod
+    ## memory            -0.5
+    ## production         0.5
+
+``` r
+exp1a_m_task_all <- buildmer(
+  formula = Acc ~ Pronoun * Task +
+    (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1a_d_task,
+  family = binomial,
+  buildmerControl(direction = "order")
+)
+```
+
+    ## Determining predictor order
+
+    ## Fitting via glm: Acc ~ 1
+
+    ## Currently evaluating LRT for: Pronoun, Task
+
+    ## Fitting via glm: Acc ~ 1 + Pronoun
+
+    ## Fitting via glm: Acc ~ 1 + Task
+
+    ## Updating formula: Acc ~ 1 + Pronoun
+
+    ## Currently evaluating LRT for: Task
+
+    ## Fitting via glm: Acc ~ 1 + Pronoun + Task
+
+    ## Updating formula: Acc ~ 1 + Pronoun + Task
+
+    ## Currently evaluating LRT for: Pronoun:Task
+
+    ## Fitting via glm: Acc ~ 1 + Pronoun + Task + Pronoun:Task
+
+    ## Updating formula: Acc ~ 1 + Pronoun + Task + Pronoun:Task
+
+    ## Fitting via glm: Acc ~ 1 + Pronoun + Task + Pronoun:Task
+
+    ## Currently evaluating LRT for: 1 | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: Acc ~ 1 + Pronoun + Task + Pronoun:Task +
+    ##     (1 | SubjID)
+
+    ## Fitting via glmer, with ML: Acc ~ 1 + Pronoun + Task + Pronoun:Task +
+    ##     (1 | Name)
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## Updating formula: Acc ~ 1 + Pronoun + Task + Pronoun:Task + (1 |
+    ##     SubjID)
+
+    ## Currently evaluating LRT for: Pronoun | SubjID, 1 | Name
+
+    ## Fitting via glmer, with ML: Acc ~ 1 + Pronoun + Task + Pronoun:Task +
+    ##     (1 + Pronoun | SubjID)
+
+    ## Fitting via glmer, with ML: Acc ~ 1 + Pronoun + Task + Pronoun:Task +
+    ##     (1 | SubjID) + (1 | Name)
+
+    ## Updating formula: Acc ~ 1 + Pronoun + Task + Pronoun:Task + (1 |
+    ##     SubjID) + (1 | Name)
+
+    ## Currently evaluating LRT for: Pronoun | SubjID, Pronoun | Name
+
+    ## Fitting via glmer, with ML: Acc ~ 1 + Pronoun + Task + Pronoun:Task +
+    ##     (1 + Pronoun | SubjID) + (1 | Name)
+
+    ## Fitting via glmer, with ML: Acc ~ 1 + Pronoun + Task + Pronoun:Task +
+    ##     (1 | SubjID) + (1 + Pronoun | Name)
+
+    ## boundary (singular) fit: see help('isSingular')
+
+    ## Ending the ordering procedure due to having reached the maximal
+    ##     feasible model - all higher models failed to converge. The types of
+    ##     convergence failure are: lme4 reports not having converged (-1)
+    ##     Singular fit
+
+``` r
+summary(exp1a_m_task_all)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) (p-values based on Wald z-scores) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: Acc ~ 1 + Pronoun + Task + Pronoun:Task + (1 | SubjID) + (1 |  
+    ##     Name)
+    ##    Data: exp1a_d_task
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   2599.0   2645.4  -1291.5   2583.0     2440 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.2606 -0.6240  0.3851  0.5335  2.6929 
+    ## 
+    ## Random effects:
+    ##  Groups Name        Variance Std.Dev.
+    ##  SubjID (Intercept) 0.412130 0.64197 
+    ##  Name   (Intercept) 0.002093 0.04575 
+    ## Number of obs: 2448, groups:  SubjID, 102; Name, 12
+    ## 
+    ## Fixed effects:
+    ##                                       Estimate Std. Error  z value Pr(>|z|)
+    ## (Intercept)                            0.83988    0.08328 10.08473    0.000
+    ## Pronounthey vs he+she                  2.20275    0.10704 20.57897    0.000
+    ## Pronounhe vs she                       0.14863    0.13586  1.09398    0.274
+    ## Taskmem vs prod                        0.12322    0.10116  1.21803    0.223
+    ## Pronounthey vs he+she:Taskmem vs prod  1.21198    0.20492  5.91429    0.000
+    ## Pronounhe vs she:Taskmem vs prod       0.14218    0.26127  0.54417    0.586
+    ##                                       Pr(>|t|)    
+    ## (Intercept)                            < 2e-16 ***
+    ## Pronounthey vs he+she                  < 2e-16 ***
+    ## Pronounhe vs she                         0.274    
+    ## Taskmem vs prod                          0.223    
+    ## Pronounthey vs he+she:Taskmem vs prod 3.33e-09 ***
+    ## Pronounhe vs she:Taskmem vs prod         0.586    
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) Prnvh+ Prnnvs Tskmvp Pvh+vp
+    ## Prnnthyvsh+ 0.143                             
+    ## Prononhvssh 0.030  0.043                      
+    ## Taskmmvsprd 0.077  0.046  0.026               
+    ## Prvh+sh:Tvp 0.042  0.127  0.023  0.167        
+    ## Prnnvsh:Tvp 0.017  0.020  0.139  0.040  0.030
+
+- No main effect of Task (p = .22)
+- Significant interaction between Pronoun and Task (beta = 1.21, p \<.
+  001)
+
+Dummy code to probe interaction:
+
+First, the Task effect just for they/them characters:
+
+``` r
+exp1a_m_task_they0 <- glmer(
+  formula = Acc ~ Pronoun_They0 * Task +
+    (1 | SubjID) + (1 | Name),  # use random effects from main
+  data = exp1a_d_task,
+  family = binomial,
+)
+
+summary(exp1a_m_task_they0)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: Acc ~ Pronoun_They0 * Task + (1 | SubjID) + (1 | Name)
+    ##    Data: exp1a_d_task
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   2596.4   2631.2  -1292.2   2584.4     2442 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.4963 -0.6221  0.4018  0.5377  2.6807 
+    ## 
+    ## Random effects:
+    ##  Groups Name        Variance Std.Dev.
+    ##  SubjID (Intercept) 0.411267 0.6413  
+    ##  Name   (Intercept) 0.001109 0.0333  
+    ## Number of obs: 2448, groups:  SubjID, 102; Name, 12
+    ## 
+    ## Fixed effects:
+    ##                               Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                    -0.6137     0.1008  -6.091 1.13e-09 ***
+    ## Pronoun_They0                   2.1780     0.1058  20.577  < 2e-16 ***
+    ## Taskmem vs prod                -0.6765     0.1547  -4.372 1.23e-05 ***
+    ## Pronoun_They0:Taskmem vs prod   1.1962     0.2027   5.902 3.60e-09 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) Prn_T0 Tskmvp
+    ## Pronon_Thy0 -0.583              
+    ## Taskmmvsprd  0.068 -0.081       
+    ## Prnn_T0:Tvp -0.055  0.126 -0.765
+
+- Production is significantly *less* accurate than memory for they/them
+  characters (beta = -0.81, p \<. .001)
+
+Second, the Task effect just for he/him and she/her characters:
+
+``` r
+exp1a_m_task_heshe0 <- glmer(
+  formula = Acc ~ Pronoun_HeShe0 * Task +
+    (1 | SubjID) + (1 | Name),  # use random effects from main
+  data = exp1a_d_task,
+  family = binomial
+)
+
+summary(exp1a_m_task_heshe0)
+```
+
+    ## Generalized linear mixed model fit by maximum likelihood (Laplace
+    ##   Approximation) [glmerMod]
+    ##  Family: binomial  ( logit )
+    ## Formula: Acc ~ Pronoun_HeShe0 * Task + (1 | SubjID) + (1 | Name)
+    ##    Data: exp1a_d_task
+    ## 
+    ##      AIC      BIC   logLik deviance df.resid 
+    ##   2596.4   2631.2  -1292.2   2584.4     2442 
+    ## 
+    ## Scaled residuals: 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -4.4963 -0.6221  0.4018  0.5377  2.6807 
+    ## 
+    ## Random effects:
+    ##  Groups Name        Variance Std.Dev.
+    ##  SubjID (Intercept) 0.411264 0.64130 
+    ##  Name   (Intercept) 0.001109 0.03331 
+    ## Number of obs: 2448, groups:  SubjID, 102; Name, 12
+    ## 
+    ## Fixed effects:
+    ##                                Estimate Std. Error z value Pr(>|z|)    
+    ## (Intercept)                     1.56431    0.09441  16.569  < 2e-16 ***
+    ## Pronoun_HeShe0                 -2.17803    0.10585 -20.577  < 2e-16 ***
+    ## Taskmem vs prod                 0.51974    0.13050   3.983 6.81e-05 ***
+    ## Pronoun_HeShe0:Taskmem vs prod -1.19621    0.20269  -5.902 3.60e-09 ***
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Correlation of Fixed Effects:
+    ##             (Intr) Pr_HS0 Tskmvp
+    ## Pronon_HSh0 -0.499              
+    ## Taskmmvsprd  0.108 -0.099       
+    ## Prn_HS0:Tvp -0.083  0.126 -0.646
+
+- Production is significantly *more* accurate than memory for he.him and
+  she/her characters (beta = 0.55, p \<. .001)
+
 # Compare Pet Questions
 
 Compare pet accuracy to pronoun accuracy. Pronoun (renamed to Character

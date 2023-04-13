@@ -1530,9 +1530,82 @@ summary(exp1b_m_pet_heshe)
 ``` r
 ```
 
+### Task Difference
+
+Difference score between memory and production for each pronoun for each
+participant
 
 ``` r
+# calculate difference between memory and production accuracy for each
+# participant for they/them characters
+exp1_d_diff <- exp1_d %>%
+  group_by(Experiment, SubjID, Pronoun) %>%
+  summarise(
+    M_Acc = mean(M_Acc),
+    P_Acc = mean(P_Acc),
+    Diff  = M_Acc - P_Acc
+  ) %>%
+  ungroup()
+summary(exp1_d_diff)
 ```
 
+    ##  Experiment                SubjID         Pronoun        M_Acc       
+    ##  Exp1A:306   R_0qPfWjp8o4W3Z61:  3   he/him   :203   Min.   :0.0000  
+    ##  Exp1B:303   R_10rsyLyHIiIDRid:  3   she/her  :203   1st Qu.:0.5000  
+    ##              R_1CjZq8z4i6or5n4:  3   they/them:203   Median :0.7500  
+    ##              R_1dc9udPmRXLjJyE:  3                   Mean   :0.6741  
+    ##              R_1DwBVPFag0EjOzK:  3                   3rd Qu.:1.0000  
+    ##              R_1Eh4Yz555Zo53L7:  3                   Max.   :1.0000  
+    ##              (Other)          :591                                   
+    ##      P_Acc             Diff          
+    ##  Min.   :0.0000   Min.   :-1.000000  
+    ##  1st Qu.:0.5000   1st Qu.:-0.250000  
+    ##  Median :0.7500   Median : 0.000000  
+    ##  Mean   :0.6765   Mean   :-0.002463  
+    ##  3rd Qu.:1.0000   3rd Qu.: 0.250000  
+    ##  Max.   :1.0000   Max.   : 1.000000  
+    ## 
 
+``` r
+# simple lm with diff as outcome
+exp1_m_diff <- lm(
+  formula = Diff ~ Experiment * Pronoun,
+  data = exp1_d_diff
+)
+
+summary(exp1_m_diff)
+```
+
+    ## 
+    ## Call:
+    ## lm(formula = Diff ~ Experiment * Pronoun, data = exp1_d_diff)
+    ## 
+    ## Residuals:
+    ##      Min       1Q   Median       3Q      Max 
+    ## -1.14216 -0.18137  0.04208  0.10784  1.05446 
+    ## 
+    ## Coefficients:
+    ##                                           Estimate Std. Error t value Pr(>|t|)
+    ## (Intercept)                              -0.002459   0.011920  -0.206    0.837
+    ## Experiment1A vs 1B                        0.001618   0.023839   0.068    0.946
+    ## Pronounthey vs he+she                    -0.180802   0.025541  -7.079 4.06e-12
+    ## Pronounhe vs she                         -0.001165   0.029197  -0.040    0.968
+    ## Experiment1A vs 1B:Pronounthey vs he+she  0.079077   0.051082   1.548    0.122
+    ## Experiment1A vs 1B:Pronounhe vs she       0.027082   0.058395   0.464    0.643
+    ##                                             
+    ## (Intercept)                                 
+    ## Experiment1A vs 1B                          
+    ## Pronounthey vs he+she                    ***
+    ## Pronounhe vs she                            
+    ## Experiment1A vs 1B:Pronounthey vs he+she    
+    ## Experiment1A vs 1B:Pronounhe vs she         
+    ## ---
+    ## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    ## 
+    ## Residual standard error: 0.2942 on 603 degrees of freedom
+    ## Multiple R-squared:  0.08057,    Adjusted R-squared:  0.07294 
+    ## F-statistic: 10.57 on 5 and 603 DF,  p-value: 9.617e-10
+
+- No main effect of experiment
+- No interactions with pronoun
 

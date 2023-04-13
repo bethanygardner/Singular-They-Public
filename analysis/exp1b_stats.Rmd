@@ -475,4 +475,39 @@ summary(exp1b_m_pet_heshe)
 
 -   Like in main experiment, significant (p \< .001) main effect of Question Type (M_Type) means that pronoun questions were more accurate than pet questions for he/him + she/her characters
 
+### Task Difference
+
+Difference score between memory and production for each pronoun for each participant
+
+```{r}
+#| label: exp1-compare-diff-means
+
+# calculate difference between memory and production accuracy for each
+# participant for they/them characters
+exp1_d_diff <- exp1_d %>%
+  group_by(Experiment, SubjID, Pronoun) %>%
+  summarise(
+    M_Acc = mean(M_Acc),
+    P_Acc = mean(P_Acc),
+    Diff  = M_Acc - P_Acc
+  ) %>%
+  ungroup()
+summary(exp1_d_diff)
+```
+
+```{r}
+#| label: exp1-compare-diff-model
+
+# simple lm with diff as outcome
+exp1_m_diff <- lm(
+  formula = Diff ~ Experiment * Pronoun,
+  data = exp1_d_diff
+)
+
+summary(exp1_m_diff)
+```
+
+-   No main effect of experiment
+-   No interactions with pronoun
+
 

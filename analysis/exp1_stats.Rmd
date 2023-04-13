@@ -337,7 +337,90 @@ exp1a_m_mp@model %>%
 -   The effect of memory accuracy is significant (p\<.001), such that participants are 3.47x more likely to get the production right if they got the memory right.
 
 -   Significant interaction between pronoun type (they/them vs. he/him + she/her) and memory accuracy (p\<.05) (odds 0.44). The relative difficulty of they/them was attenuated when the participant had correctly remembered the character's pronoun during the memory phase of the task.
+
+# Compare Memory and Production
+
+Compare accuracy between memory and production tasks by mean-center effects coding Task:
+
+```{r}
+#| label: exp1-task-setup
+
+exp1a_d_task <- exp1a_d_all %>%  # memory + prod in long format
+  filter(Task != "introduction") %>%
+  filter(M_Type == "pronoun" | M_Type == "") %>%
+  select(Task, Pronoun, Name, M_Acc, P_Acc, SubjID, Name) %>%
+  mutate(.keep = c("unused"), Acc = case_when(
+    !is.na(M_Acc) ~ M_Acc,  # group into 1 accuracy variable
+    !is.na(P_Acc) ~ P_Acc
+  )) %>%
+  mutate(  # add pronoun dummy code variables
+    Pronoun_They0  = ifelse(Pronoun == "they/them", 0, 1),
+    Pronoun_HeShe0 = ifelse(Pronoun != "they/them", 0, 1)
+  )
+
+# Mean-center effects code Task
+exp1a_d_task$Task %<>% factor()
+contrasts(exp1a_d_task$Task) <- cbind(
+  "mem vs prod" = c(-.5, +.5)
+)
+contrasts(exp1a_d_task$Task)
 ```
+
+```{r}
+#| label: exp1-task-model-all
+#| cache: true
+
+exp1a_m_task_all <- buildmer(
+  formula = Acc ~ Pronoun * Task +
+    (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1a_d_task,
+  family = binomial,
+  buildmerControl(direction = "order")
+)
+
+summary(exp1a_m_task_all)
+```
+
+-   No main effect of Task (p = .22)
+-   Significant interaction between Pronoun and Task (beta = 1.21, p <. 001)
+
+Dummy code to probe interaction:
+
+First, the Task effect just for they/them characters:
+
+```{r}
+#| label: exp1-task-model-they
+#| cache: true
+
+exp1a_m_task_they0 <- glmer(
+  formula = Acc ~ Pronoun_They0 * Task +
+    (1 | SubjID) + (1 | Name),  # use random effects from main
+  data = exp1a_d_task,
+  family = binomial,
+)
+
+summary(exp1a_m_task_they0)
+```
+
+-   Production is significantly *less* accurate than memory for they/them characters (beta = -0.81, p <. .001)
+
+Second, the Task effect just for he/him and she/her characters:
+
+```{r}
+#| label: exp1-task-model-heshe
+#| cache: true
+
+exp1a_m_task_heshe0 <- glmer(
+  formula = Acc ~ Pronoun_HeShe0 * Task +
+    (1 | SubjID) + (1 | Name),  # use random effects from main
+  data = exp1a_d_task,
+  family = binomial
+)
+
+summary(exp1a_m_task_heshe0)
+```
+
+- Production is significantly *more* accurate than memory for he.him and she/her characters (beta = 0.55, p <. .001)    
 
 # Compare Pet Questions
 
