@@ -390,11 +390,11 @@ To check this interaction direction, dummy coded Pronoun with they/them characte
 exp1a_d_pronounsPets %<>% mutate(CharPronoun_They0 = ifelse(
   CharPronoun == "they/them", 0, 1))
 
-exp1a_m_pet_they <- buildmer(
+exp1a_m_pet_they <- glmer(
   formula = M_Acc ~ CharPronoun_They0 * M_Type +
-    (M_Type | SubjID) + (M_Type | Name),
-  data = exp1a_d_pronounsPets, family = binomial,
-  buildmerControl(direction = "order")
+    (M_Type | SubjID),  # use random effects from main
+  data = exp1a_d_pronounsPets,
+  family = binomial
 )
 
 summary(exp1a_m_pet_they)
@@ -411,11 +411,11 @@ Now dummy code to get main effect of Question Type in he/him + she/her (= 0)
 exp1a_d_pronounsPets %<>% mutate(CharPronoun_HeShe0 = ifelse(
   CharPronoun == "they/them", 1, 0))
 
-exp1a_m_pet_heshe <- buildmer(
+exp1a_m_pet_heshe <- glmer(
   formula = M_Acc ~ CharPronoun_HeShe0 * M_Type +
-      (M_Type | SubjID) + (M_Type | Name),
-  data = exp1a_d_pronounsPets, family = binomial,
-  buildmerControl(direction = "order")
+      (M_Type | SubjID),  # use random effects from main
+  data = exp1a_d_pronounsPets,
+  family = binomial
 )
 
 summary(exp1a_m_pet_heshe)
