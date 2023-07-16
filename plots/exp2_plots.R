@@ -3,7 +3,7 @@ library(magrittr)
 library(patchwork)
 library(RColorBrewer)
 
-load("analysis/allAnalyses.RData")
+load("all_analyses.RData")
 
 exp2_theme <- theme(
   axis.text.x      = element_text(size = 11),

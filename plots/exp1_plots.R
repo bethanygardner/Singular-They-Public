@@ -3,7 +3,7 @@ library(magrittr)
 library(patchwork)
 library(RColorBrewer)
 
-load("analysis/allAnalyses.RData")
+load("all_analyses.RData")
 
 # Memory----
 ## Accuracy----

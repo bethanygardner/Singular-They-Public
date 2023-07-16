@@ -6,7 +6,7 @@ library(ggsignif)
 library(ggh4x)
 library(ggdist)
 
-load("analysis/allAnalyses.RData")
+load("all_analyses.RData")
 
 # Experiment 1A----
 ## Job, pet, pronoun----
