@@ -52,7 +52,7 @@ exp1_p_mem_dist <- ggplot(exp1a_d,
   theme(
     axis.text.x   = element_text(size = 11),
     axis.text.y   = element_text(size = 9),
-    axis.ticks  = element_blank(),
+    axis.ticks    = element_blank(),
     axis.title    = element_text(size = 11),
     legend.margin = margin(l = 0, r = -5),
     legend.text   = element_text(size = 11),
@@ -62,7 +62,7 @@ exp1_p_mem_dist <- ggplot(exp1a_d,
     x    = "Correct Pronoun",
     y    = "Proportion of Trials",
     fill = "Pronoun\nSelected"
-)
+  )
 
 ## Combined----
 exp1_p_mem <-  exp1_p_mem_acc + exp1_p_mem_dist +
@@ -158,7 +158,7 @@ exp1a_d_they$P_Count %<>% as.factor() %>%
   )
 
 exp1_p_prod_they <- ggplot(exp1a_d_they,
-                      aes(x = Dummy, fill = P_Count)) +
+  aes(x = Dummy, fill = P_Count)) +
   geom_bar(position = "fill") +
   scale_fill_manual(values = c("#666666", brewer.pal(6, "Purples"))) +
   scale_x_discrete(expand =  c(0, 0)) +
@@ -185,8 +185,7 @@ exp1_p_prod <- exp1_p_prod_acc / (exp1_p_prod_dist | exp1_p_prod_they) +
   plot_annotation(
     title = "Experiment 1: Accuracy & Distribution of Production Responses",
     tag_levels = "A",
-    theme = theme(
-      plot.title = element_text(face = "bold", size = 12))
+    theme = theme(plot.title = element_text(face = "bold", size = 12))
   )
 exp1_p_prod
 
@@ -230,7 +229,8 @@ exp1_p_mp_compare <- ggplot(exp1a_d,
     title = "Combined Accuracy",
     x     = element_blank(),
     y     = "Proportion of Characters",
-    fill  = element_blank())
+    fill  = element_blank()
+  )
 
 ## Production split by memory----
 exp1_p_mp_split <- ggplot(exp1a_d,
@@ -246,7 +246,8 @@ exp1_p_mp_split <- ggplot(exp1a_d,
   ) +
   scale_alpha_discrete(
     range  = c(0.5, 1),
-    labels = c("Memory\nIncorrect", "Memory\nCorrect")) +
+    labels = c("Memory\nIncorrect", "Memory\nCorrect")
+  ) +
   scale_fill_brewer(palette = "Dark2") +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
@@ -263,8 +264,8 @@ exp1_p_mp_split <- ggplot(exp1a_d,
   ) +
   guides(alpha = guide_legend(
     byrow = TRUE, keywidth = 0.75,
-    override.aes = theme(color = NA))
-  ) +
+    override.aes = theme(color = NA)
+  )) +
   labs(
     title = "Production Accuracy\nSplit By Memory Accuracy",
     x     = element_blank(),

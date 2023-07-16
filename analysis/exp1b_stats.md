@@ -2,33 +2,26 @@ Improving memory for and production of singular <i>they</i> pronouns:
 Experiment 1B
 ================
 Bethany Gardner
-03/24/2022, 04/08/2023
+04/13/2023
 
-- <a href="#load-data" id="toc-load-data">Load Data</a>
-- <a href="#memory" id="toc-memory">Memory</a>
-  - <a href="#descriptive-stats" id="toc-descriptive-stats">Descriptive
-    Stats</a>
-  - <a href="#model" id="toc-model">Model</a>
-- <a href="#production" id="toc-production">Production</a>
-  - <a href="#descriptive-stats-1" id="toc-descriptive-stats-1">Descriptive
-    Stats</a>
-  - <a href="#model-1" id="toc-model-1">Model</a>
-- <a href="#memory-predicting-production"
-  id="toc-memory-predicting-production">Memory Predicting Production</a>
-  - <a href="#descriptive-stats-2" id="toc-descriptive-stats-2">Descriptive
-    Stats</a>
-  - <a href="#model-2" id="toc-model-2">Model</a>
-- <a href="#jobpet" id="toc-jobpet">Job/Pet</a>
-- <a href="#compare-to-main-experiment"
-  id="toc-compare-to-main-experiment">Compare to Main Experiment</a>
-  - <a href="#load-data-1" id="toc-load-data-1">Load Data</a>
-  - <a href="#memory-accuracy" id="toc-memory-accuracy">Memory Accuracy</a>
-  - <a href="#production-accuracy" id="toc-production-accuracy">Production
-    Accuracy</a>
-  - <a href="#memory-predicting-production-1"
-    id="toc-memory-predicting-production-1">Memory Predicting Production</a>
-  - <a href="#task-difference" id="toc-task-difference">Task Difference</a>
-  - <a href="#job-and-pet" id="toc-job-and-pet">Job and pet</a>
+- [Load Data](#load-data)
+- [Memory](#memory)
+  - [Descriptive Stats](#descriptive-stats)
+  - [Model](#model)
+- [Production](#production)
+  - [Descriptive Stats](#descriptive-stats-1)
+  - [Model](#model-1)
+- [Memory Predicting Production](#memory-predicting-production)
+  - [Descriptive Stats](#descriptive-stats-2)
+  - [Model](#model-2)
+- [Job/Pet](#jobpet)
+- [Compare to Main Experiment](#compare-to-main-experiment)
+  - [Load Data](#load-data-1)
+  - [Memory Accuracy](#memory-accuracy)
+  - [Production Accuracy](#production-accuracy)
+  - [Memory Predicting Production](#memory-predicting-production-1)
+  - [Task Difference](#task-difference)
+  - [Job and pet](#job-and-pet)
 
 This is a replication of the first experiment. Everything is identical,
 except that the production task occurs before the memory task.
@@ -509,8 +502,7 @@ exp1b_d %<>% mutate(
     M_Acc == 0 & P_Acc == 0 ~ "Both wrong",
     M_Acc == 1 & P_Acc == 0 ~ "Memory only",
     M_Acc == 0 & P_Acc == 1 ~ "Production only"
-  )
-)
+))
 
 exp1b_d %>%
   group_by(Pronoun, Combined_Accuracy) %>%
@@ -626,10 +618,6 @@ summary(exp1b_m_mp_buildmer)
     ## Call:
     ## stats::glm(formula = P_Acc ~ 1 + Pronoun + M_Acc_Factor + M_Acc_Factor:Pronoun, 
     ##     family = binomial, data = exp1b_d)
-    ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -2.0703  -0.5863   0.4995   0.5185   1.9214  
     ## 
     ## Coefficients:
     ##                                                  Estimate Std. Error z value
@@ -878,13 +866,13 @@ summary(exp1b_opt_subjInt)
     ## 
     ## $times
     ##                               user.self sys.self elapsed user.child sys.child
-    ## bobyqa                             0.40        0    0.53         NA        NA
-    ## Nelder_Mead                        1.68        0    2.19         NA        NA
-    ## nlminbwrap                         0.85        0    1.11         NA        NA
-    ## nmkbw                              1.26        0    1.61         NA        NA
-    ## optimx.L-BFGS-B                    1.79        0    2.42         NA        NA
-    ## nloptwrap.NLOPT_LN_NELDERMEAD      1.39        0    1.99         NA        NA
-    ## nloptwrap.NLOPT_LN_BOBYQA          0.28        0    0.37         NA        NA
+    ## bobyqa                             1.01     0.00    1.34         NA        NA
+    ## Nelder_Mead                        4.01     0.05    5.55         NA        NA
+    ## nlminbwrap                         2.19     0.06    2.85         NA        NA
+    ## nmkbw                              3.30     0.04    4.23         NA        NA
+    ## optimx.L-BFGS-B                    4.37     0.00    5.41         NA        NA
+    ## nloptwrap.NLOPT_LN_NELDERMEAD      3.14     0.00    3.94         NA        NA
+    ## nloptwrap.NLOPT_LN_BOBYQA          0.61     0.03    0.86         NA        NA
     ## 
     ## $feval
     ##                        bobyqa                   Nelder_Mead 
@@ -1108,13 +1096,13 @@ summary(exp1b_opt_itemInt)
     ## 
     ## $times
     ##                               user.self sys.self elapsed user.child sys.child
-    ## bobyqa                             0.25        0    0.27         NA        NA
-    ## Nelder_Mead                        0.39        0    0.52         NA        NA
-    ## nlminbwrap                         0.25        0    0.27         NA        NA
-    ## nmkbw                              0.58        0    0.67         NA        NA
-    ## optimx.L-BFGS-B                    0.94        0    1.03         NA        NA
-    ## nloptwrap.NLOPT_LN_NELDERMEAD      0.48        0    0.55         NA        NA
-    ## nloptwrap.NLOPT_LN_BOBYQA          0.21        0    0.30         NA        NA
+    ## bobyqa                             0.50     0.00    0.61         NA        NA
+    ## Nelder_Mead                        1.05     0.00    1.29         NA        NA
+    ## nlminbwrap                         0.47     0.00    0.74         NA        NA
+    ## nmkbw                              1.58     0.02    2.16         NA        NA
+    ## optimx.L-BFGS-B                    1.98     0.05    2.59         NA        NA
+    ## nloptwrap.NLOPT_LN_NELDERMEAD      1.06     0.00    1.38         NA        NA
+    ## nloptwrap.NLOPT_LN_BOBYQA          0.62     0.00    0.67         NA        NA
     ## 
     ## $feval
     ##                        bobyqa                   Nelder_Mead 
@@ -1141,10 +1129,6 @@ summary(exp1b_m_mp_buildmer)
     ## Call:
     ## stats::glm(formula = P_Acc ~ 1 + Pronoun + M_Acc_Factor + M_Acc_Factor:Pronoun, 
     ##     family = binomial, data = exp1b_d)
-    ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -2.0703  -0.5863   0.4995   0.5185   1.9214  
     ## 
     ## Coefficients:
     ##                                                  Estimate Std. Error z value
@@ -1251,8 +1235,7 @@ exp1b_d_pronounsPets <- exp1b_d_all %>%
   rename("CharPronoun" = "Pronoun")
 
 exp1b_d_pronounsPets$M_Type %<>% droplevels()
-contrasts(exp1b_d_pronounsPets$M_Type) <- cbind(
-  "petQ vs pronounQ" = c(-.5, .5))
+contrasts(exp1b_d_pronounsPets$M_Type) <- cbind("petQ vs pronounQ" = c(-.5, .5))
 contrasts(exp1b_d_pronounsPets$M_Type)
 ```
 
@@ -1263,10 +1246,10 @@ contrasts(exp1b_d_pronounsPets$M_Type)
 ``` r
 exp1b_m_pet <- buildmer(
   formula = M_Acc ~ CharPronoun * M_Type +
-            (M_Type * CharPronoun | SubjID) +
-            (M_Type * CharPronoun | Name),
+    (M_Type * CharPronoun | SubjID) + (M_Type * CharPronoun | Name),
   data = exp1b_d_pronounsPets, family = binomial,
-  buildmerControl(direction = "order"))
+  buildmerControl(direction = "order")
+)
 ```
 
     ## Determining predictor order
@@ -1416,13 +1399,13 @@ characters as 0 and he/him and she/her characters as 1
 
 ``` r
 exp1b_d_pronounsPets %<>% mutate(CharPronoun_They0 = ifelse(
-  CharPronoun == "they/them", 0, 1))
+  CharPronoun == "they/them", 0, 1
+))
 
 exp1b_m_pet_they <- glmer(
   formula = M_Acc ~ CharPronoun_They0 * M_Type + (M_Type | SubjID),
-  data = exp1b_d_pronounsPets, family = binomial,
+  data = exp1b_d_pronounsPets, family = binomial
 )
-
 summary(exp1b_m_pet_they)
 ```
 
@@ -1474,13 +1457,13 @@ Now dummy code to get main effect of Question Type in he/him + she/her
 
 ``` r
 exp1b_d_pronounsPets %<>% mutate(CharPronoun_HeShe0 = ifelse(
-  CharPronoun == "they/them", 1, 0))
+  CharPronoun == "they/them", 1, 0
+))
 
 exp1b_m_pet_heshe <- glmer(
   formula = M_Acc ~ CharPronoun_HeShe0 * M_Type + (M_Type | SubjID),
-  data = exp1b_d_pronounsPets, family = binomial,
+  data = exp1b_d_pronounsPets, family = binomial
 )
-
 summary(exp1b_m_pet_heshe)
 ```
 
@@ -1559,11 +1542,7 @@ str(exp1a_d)
     ##  $ P_Acc     : int  1 1 0 0 1 1 1 1 1 1 ...
 
 ``` r
-exp1_d <- bind_rows(
-  .id = "Experiment",
-  "Exp1A" = exp1a_d,
-  "Exp1B" = exp1b_d
-)
+exp1_d <- bind_rows(.id = "Experiment", "Exp1A" = exp1a_d, "Exp1B" = exp1b_d)
 
 # add contrast coding back to Pronoun
 contrasts(exp1_d$Pronoun) <- cbind(
@@ -1858,10 +1837,6 @@ summary(exp1_m_prod)
     ## stats::glm(formula = P_Acc ~ 1 + Pronoun + Experiment + Pronoun:Experiment, 
     ##     family = binomial, data = exp1_d)
     ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -1.9753  -0.8346   0.5823   0.6087   1.5645  
-    ## 
     ## Coefficients:
     ##                                          Estimate Std. Error z value Pr(>|z|)
     ## (Intercept)                               0.90500    0.05194  17.425   <2e-16
@@ -2155,7 +2130,6 @@ exp1_m_diff <- lm(
   formula = Diff ~ Experiment * Pronoun,
   data = exp1_d_diff
 )
-
 summary(exp1_m_diff)
 ```
 
@@ -2197,9 +2171,10 @@ summary(exp1_m_diff)
 Compare job and pet means too:
 
 ``` r
-exp1_d_pets <- bind_rows(.id     = "Exp",
-  "Exp1A" = exp1a_d_all,
-  "Exp1B" = exp1b_d_all
+exp1_d_pets <- bind_rows(
+    .id = "Exp",
+    "Exp1A" = exp1a_d_all,
+    "Exp1B" = exp1b_d_all
   ) %>%
   filter(M_Type == "pet") %>%
   select(Exp, SubjID, Pronoun, M_Acc)
@@ -2221,9 +2196,10 @@ exp1_d_pets %>%
 - Pet accuracy for Exp1B is numerically a tiny bit higher
 
 ``` r
-exp1_d_jobs <- bind_rows(.id = "Exp",
-  "Exp1A" = exp1a_d_all,
-  "Exp1B" = exp1b_d_all
+exp1_d_jobs <- bind_rows(
+    .id = "Exp",
+    "Exp1A" = exp1a_d_all,
+    "Exp1B" = exp1b_d_all
   ) %>%
   filter(M_Type == "job") %>%
   select(Exp, SubjID, Pronoun, M_Acc)

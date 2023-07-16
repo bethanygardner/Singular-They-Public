@@ -13,7 +13,7 @@ load("analysis/allAnalyses.RData")
 exp1a_p_allMem <- read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE) %>%
   filter(Task == "memory") %>%
   group_by(SubjID, M_Type, Pronoun) %>%
-  summarise(M_Acc_Subj = mean(M_Acc)) %>% # by-subject means
+  summarise(M_Acc_Subj = mean(M_Acc)) %>%  # by-subject means
   ggplot(aes(x = M_Type, y = M_Acc_Subj, fill = Pronoun, color = Pronoun)) +
   geom_point(
     position = position_jitterdodge(
@@ -23,8 +23,7 @@ exp1a_p_allMem <- read.csv("data/exp1a_data.csv", stringsAsFactors = TRUE) %>%
   ) +
   stat_summary(
     fun.data = mean_cl_boot, geom = "bar",
-    position = position_dodge(width = 0.9),
-    alpha = 0.4, color = NA
+    position = position_dodge(width = 0.9), alpha = 0.4, color = NA
   ) +
   stat_summary(
     fun.data = mean_cl_boot, geom = "errorbar",
@@ -101,8 +100,7 @@ exp1ab_p_they_memory <- ggplot(
   aes(x = Experiment, y = M_Acc_Subj, color = Experiment, fill = Experiment)) +
   stat_summary(
     fun.data = mean_cl_boot, geom = "bar",
-    position = position_dodge(width = 0.5),
-    color = NA, alpha = 0.4
+    position = position_dodge(width = 0.5), color = NA, alpha = 0.4
   ) +
   geom_point(
     position = position_jitter(width = 0.4, height = 0.01, seed = 1),
@@ -114,8 +112,7 @@ exp1ab_p_they_memory <- ggplot(
     linewidth = 0.5, width = 0.5, color = "black"
   ) +
   geom_signif(
-    comparisons = list(c("1A", "1B")),
-    map_signif_level = TRUE,
+    comparisons = list(c("1A", "1B")), map_signif_level = TRUE,
     color = "black", tip_length = 0, textsize = 3, vjust = -0.2
   ) +
   scale_color_manual(
@@ -133,10 +130,7 @@ exp1ab_p_they_memory <- ggplot(
   ) +
   theme_classic() +
   exp1ab_theme +
-  guides(
-    color = guide_none(),
-    fill  = guide_legend(byrow = TRUE)
-  ) +
+  guides(color = guide_none(), fill = guide_legend(byrow = TRUE)) +
   labs(
     title = "Memory",
     x     = element_blank(),
@@ -150,8 +144,7 @@ exp1ab_p_they_production <- ggplot(
   aes(x = Experiment, y = P_Acc_Subj, color = Experiment, fill = Experiment)) +
   stat_summary(
     fun.data = mean_cl_boot, geom = "bar",
-    position = position_dodge(width = 0.5),
-    color = NA, alpha = 0.4
+    position = position_dodge(width = 0.5), color = NA, alpha = 0.4
   ) +
   geom_point(
     position = position_jitter(width = 0.4, height = 0.01, seed = 1),
@@ -163,8 +156,7 @@ exp1ab_p_they_production <- ggplot(
     linewidth = 0.5, width = 0.5, color = "black"
   ) +
   geom_signif(
-    comparisons = list(c("1A", "1B")),
-    map_signif_level = TRUE,
+    comparisons = list(c("1A", "1B")), map_signif_level = TRUE,
     color = "black", tip_length = 0, textsize = 3, vjust = -0.2
   ) +
   scale_color_manual(
@@ -182,10 +174,7 @@ exp1ab_p_they_production <- ggplot(
   ) +
   theme_classic() +
   exp1ab_theme +
-  guides(
-    color = guide_none(),
-    fill  = guide_legend(byrow = TRUE)
-  ) +
+  guides(color = guide_none(), fill = guide_legend(byrow = TRUE)) +
   labs(
     title = "Production",
     x     = element_blank(),
@@ -196,8 +185,10 @@ exp1ab_p_they_production <- ggplot(
 #### Production by memory----
 exp1ab_p_they_both <- ggplot(
   data = exp1_d %>% filter(Pronoun == "they/them"),
-  aes(x = interaction(M_Acc_Factor, Experiment), y = P_Acc,
-      fill = Experiment, alpha = M_Acc_Factor)) +
+  aes(
+    x = interaction(M_Acc_Factor, Experiment), y = P_Acc,
+    fill = Experiment, alpha = M_Acc_Factor
+  )) +
   stat_summary(
     fun.data = mean_cl_boot, geom = "bar",
     position = position_dodge(), color = NA
@@ -232,7 +223,8 @@ exp1ab_p_they <-  exp1ab_p_they_memory + exp1ab_p_they_production +
   plot_layout(
     guides = "collect",
     design = "AABB
-              CCCD") +
+              CCCD"
+  ) +
   plot_annotation(
     title = "Experiments 1A & 1B: Accuracy for They/Them Characters",
     theme = theme(plot.title = element_text(size = 12, face = "bold"))
@@ -246,9 +238,10 @@ ggsave(
 
 ## Task difference
 exp1ab_p_task <- ggplot(exp1_d_subj,
-  aes(x = Diff_Acc_Subj, y = Pronoun, fill = Pronoun,
-      alpha = fct_rev(Experiment))
-  ) +
+  aes(
+    x = Diff_Acc_Subj, y = Pronoun, fill = Pronoun,
+    alpha = fct_rev(Experiment)
+  )) +
   stat_slab(
     normalize = "xy", justification = 0.5,
     position = position_dodge(width = 1)
@@ -321,7 +314,8 @@ exp1ab_p_memory_dist <- ggplot(exp1_d,
     x     = element_blank(),
     y     = "Proportion of Trials",
     fill  = "Pronoun\nSelected",
-   alpha  = "Experiment")
+    alpha = "Experiment"
+  )
 
 #### Memory accuracy----
 exp1ab_p_memory_acc <- ggplot(exp1_d_subj,
@@ -364,7 +358,7 @@ exp1ab_p_prod_dist <- ggplot(exp1_d,
   exp1ab_theme +
   theme(
     axis.text.y = element_text(size = 8),
-    axis.ticks = element_blank(),
+    axis.ticks  = element_blank(),
     plot.margin = margin(l = 15)
   ) +
   labs(
@@ -410,7 +404,8 @@ exp1ab_p_panel1 <- exp1ab_p_memory_acc + exp1ab_p_memory_dist +
     title = "Comparing Experiments 1A & 1B",
     theme = theme(
       plot.margin = margin(t = 8, b = 2, l = 2, r = -10, unit = "pt"),
-      plot.title  = element_text(size = 12, face = "bold"))
+      plot.title  = element_text(size = 12, face = "bold")
+    )
   )
 exp1ab_p_panel1
 
@@ -476,14 +471,14 @@ exp1ab_p_mp_split <- ggplot(exp1_d,
   ) +
   scale_alpha_discrete(
     range  = c(0.5, 1),
-    labels = c("Memory\nIncorrect", "Memory\nCorrect")) +
+    labels = c("Memory\nIncorrect", "Memory\nCorrect")
+  ) +
   scale_fill_brewer(palette = "Dark2") +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +
   facet_wrap(~Pronoun, strip.position = "bottom") +
   theme_classic() +
   exp1ab_theme +
-  guides() +
   guides(
     alpha = guide_legend(byrow = TRUE, override.aes = theme(color = NA)),
     fill = guide_none()
@@ -532,8 +527,8 @@ exp2_p_memory_dist <- ggplot(exp2_d, aes(x = Pronoun, fill = M_Response)) +
   geom_bar(position = "fill") +
   facet_grid(fct_rev(Biographies) ~ fct_rev(PSA), labeller = labeller(
     `fct_rev(PSA)` = c("1" = "Gendered Language PSA", "0" = "Unrelated PSA"),
-    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios"))
-  ) +
+    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios")
+  )) +
   scale_fill_brewer(palette = "Dark2") +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -558,8 +553,8 @@ exp2_p_prod_dist <- ggplot(exp2_d, aes(x = Pronoun, fill = P_Response)) +
   geom_bar(position = "fill") +
   facet_grid(fct_rev(Biographies) ~ fct_rev(PSA), labeller = labeller(
     `fct_rev(PSA)` = c("1" = "Gendered Language PSA", "0" = "Unrelated PSA"),
-    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios"))
-  ) +
+    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios")
+  )) +
   scale_fill_brewer(palette = "Dark2") +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -598,7 +593,7 @@ ggsave(
 ## Job, pet, pronoun----
 exp2_p_allMem <- exp2_d_all %>%
   group_by(Participant, M_Type, Pronoun) %>%
-  summarise(M_Acc_Subj = mean(M_Acc)) %>% # by-subject means
+  summarise(M_Acc_Subj = mean(M_Acc)) %>%  # by-subject means
   ggplot(aes(x = M_Type, y = M_Acc_Subj, fill = Pronoun, color = Pronoun)) +
   geom_point(
     position = position_jitterdodge(
@@ -608,8 +603,7 @@ exp2_p_allMem <- exp2_d_all %>%
   ) +
   stat_summary(
     fun.data = mean_cl_boot, geom = "bar",
-    position = position_dodge(width = 0.9),
-    alpha = 0.4, color = NA
+    position = position_dodge(width = 0.9), alpha = 0.4, color = NA
   ) +
   stat_summary(
     fun.data = mean_cl_boot, geom = "errorbar",

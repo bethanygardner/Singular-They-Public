@@ -21,7 +21,8 @@ exp2_theme <- theme(
 exp2_p_memory_acc <- ggplot(
   data = exp2_d %>%
     group_by(Participant, PSA, Biographies, Pronoun) %>%
-    summarise(M_Acc_Subj = mean(M_Acc)),
+    summarise(M_Acc_Subj = mean(M_Acc)
+  ),
   aes(x = Pronoun, y = M_Acc_Subj, fill = Pronoun, color = Pronoun)) +
   stat_summary(fun.data = mean_cl_boot, geom = "bar", alpha = 0.4, color = NA) +
   geom_point(
@@ -34,8 +35,8 @@ exp2_p_memory_acc <- ggplot(
   ) +
   facet_grid(fct_rev(Biographies) ~ fct_rev(PSA), labeller = labeller(
     `fct_rev(PSA)` = c("1" = "Gendered Language PSA", "0" = "Unrelated PSA"),
-    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios"))
-  ) +
+    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios")
+  )) +
   scale_fill_brewer(palette = "Dark2") +
   scale_color_brewer(palette = "Dark2") +
   scale_x_discrete(expand = c(0, 0)) +
@@ -55,17 +56,17 @@ exp2_p_memory_acc <- ggplot(
 ## PSA effect----
 exp2_p_memory_PSA <- exp2_d %>%
   mutate(Pronoun_Group = ifelse(
-    Pronoun == "they/them", "they/them", "he/him +\nshe/her")
-  ) %>%
+    Pronoun == "they/them", "they/them", "he/him +\nshe/her"
+  )) %>%
   group_by(PSA, Biographies, Participant, Pronoun_Group) %>%
-  summarise(M_Acc = mean(M_Acc)) %>% # summarise across he + she
+  summarise(M_Acc = mean(M_Acc)) %>%  # summarise across he + she
   group_by(PSA, Biographies, Pronoun_Group) %>%
-  summarise(mean_se(M_Acc)) %>% # summarise across participants
+  summarise(mean_se(M_Acc)) %>%  # summarise across participants
   mutate(Condition = str_c(PSA, Biographies, sep = " + ")) %>%
   ggplot(aes(
     x = Pronoun_Group, y = y, ymin = ymin, ymax = ymax,
-    group = Condition, color = fct_rev(PSA))
-  ) +
+    group = Condition, color = fct_rev(PSA)
+  )) +
   geom_line(aes(linetype = fct_rev(Biographies))) +
   geom_pointrange(size = 0.25) +
   scale_color_manual(
@@ -78,7 +79,8 @@ exp2_p_memory_PSA <- exp2_d %>%
   exp2_theme +
   theme(
     axis.ticks.x = element_blank(),
-    legend.box   = "horizontal") +
+    legend.box   = "horizontal"
+  ) +
   labs(
     x        = element_blank(),
     y        = "Mean Accuracy",
@@ -93,7 +95,8 @@ exp2_p_memory <- exp2_p_memory_acc + exp2_p_memory_PSA +
     tag_levels = "A",
     theme      = theme(
       plot.margin = margin(t = 8, b = -5, l = 5, r = 5, unit = "pt"),
-      plot.title  = element_text(size = 12, face = "bold"))
+      plot.title  = element_text(size = 12, face = "bold")
+    )
   ) +
   plot_layout(
     design = "AAAAAAA
@@ -112,7 +115,8 @@ ggsave(
 exp2_p_prod_acc <- ggplot(
   data = exp2_d %>%
     group_by(Participant, PSA, Biographies, Pronoun) %>%
-    summarise(P_Acc_Subj = mean(P_Acc)),
+    summarise(P_Acc_Subj = mean(P_Acc)
+  ),
   aes(x = Pronoun, y = P_Acc_Subj, fill = Pronoun, color = Pronoun)) +
   stat_summary(fun.data = mean_cl_boot, geom = "bar", alpha = 0.4, color = NA) +
   geom_point(
@@ -125,8 +129,8 @@ exp2_p_prod_acc <- ggplot(
   ) +
   facet_grid(fct_rev(Biographies) ~ fct_rev(PSA), labeller = labeller(
     `fct_rev(PSA)` = c("1" = "Gendered Language PSA", "0" = "Unrelated PSA"),
-    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios"))
-  ) +
+    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios")
+  )) +
   scale_fill_brewer(palette = "Dark2") +
   scale_color_brewer(palette = "Dark2") +
   scale_x_discrete(expand = c(0, 0)) +
@@ -149,14 +153,14 @@ exp2_p_prod_PSA <- exp2_d %>%
     Pronoun == "they/them", "they/them", "he/him +\nshe/her")
   ) %>%
   group_by(PSA, Biographies, Participant, Pronoun_Group) %>%
-  summarise(P_Acc = mean(P_Acc)) %>% # summarize across he + she
+  summarise(P_Acc = mean(P_Acc)) %>%  # summarize across he + she
   group_by(PSA, Biographies, Pronoun_Group) %>%
-  summarise(mean_se(P_Acc)) %>% # summarize across participants
+  summarise(mean_se(P_Acc)) %>%  # summarize across participants
   mutate(Condition = str_c(PSA, Biographies, sep = " + ")) %>%
   ggplot(aes(
     x = Pronoun_Group, y = y, ymin = ymin, ymax = ymax,
-    group = Condition, color = fct_rev(PSA))
-  ) +
+    group = Condition, color = fct_rev(PSA)
+  )) +
   geom_line(aes(linetype = fct_rev(Biographies))) +
   geom_pointrange(size = 0.25) +
   scale_color_manual(
@@ -170,7 +174,8 @@ exp2_p_prod_PSA <- exp2_d %>%
   exp2_theme +
   theme(
     axis.ticks.x = element_blank(),
-    legend.box.margin = margin(l = -10, unit = "pt")) +
+    legend.box.margin = margin(l = -10, unit = "pt")
+  ) +
   labs(
     x        = element_blank(),
     y        = "Mean Accuracy",
@@ -198,8 +203,8 @@ exp2_p_prod_they <- ggplot(exp2_d_they, aes(x = Dummy, fill = P_Count)) +
   scale_fill_manual(values = c("#666666", brewer.pal(6, "Purples"))) +
   facet_grid(fct_rev(Biographies) ~ fct_rev(PSA), labeller = labeller(
     `fct_rev(PSA)` = c("1" = "Gendered\nLang. PSA", "0" = "Unrelated \nPSA"),
-    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios"))
-  ) +
+    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios")
+  )) +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
   theme_classic() +
@@ -215,7 +220,8 @@ exp2_p_prod_they <- ggplot(exp2_d_they, aes(x = Dummy, fill = P_Count)) +
   labs(
     x    = "Number of They/Them \nResponses per Participant",
     y    = "Proportion of Participants",
-    fill = element_blank())
+    fill = element_blank()
+  )
 
 ## Combine----
 exp2_p_prod <- exp2_p_prod_acc + exp2_p_prod_PSA + exp2_p_prod_they +
@@ -224,7 +230,8 @@ exp2_p_prod <- exp2_p_prod_acc + exp2_p_prod_PSA + exp2_p_prod_they +
     tag_levels = "A",
     theme = theme(
       plot.margin = margin(t = 8, b = 0, l = 2, r = 2, unit = "pt"),
-      plot.title  = element_text(size = 12, face = "bold"))
+      plot.title  = element_text(size = 12, face = "bold")
+    )
   ) +
   plot_layout(
     design = "AAAAA
@@ -255,8 +262,8 @@ exp2_p_compare <- ggplot(exp2_d, aes(x = Pronoun, fill = CompareTask)) +
   geom_bar(position = "fill") +
   facet_grid(fct_rev(Biographies) ~ fct_rev(PSA), labeller = labeller(
     `fct_rev(PSA)` = c("1" = "Gendered Language PSA", "0" = "Unrelated PSA"),
-    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios"))
-  ) +
+    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios")
+  )) +
   scale_fill_manual(values = c("pink3", "#E6AB02", "tomato3", "#367ABF")) +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0)) +
@@ -286,11 +293,12 @@ exp2_p_split <- ggplot(exp2_d,
   ) +
   facet_grid(fct_rev(Biographies) ~ fct_rev(PSA), labeller = labeller(
     `fct_rev(PSA)` = c("1" = "Gendered Language PSA", "0" = "Unrelated PSA"),
-    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios"))
-  ) +
+    `fct_rev(Biographies)` = c("1" = "They Bios", "0" = "He/She Bios")
+  )) +
   scale_alpha_discrete(
     range  = c(0.5, 1),
-    labels = c("Memory\nIncorrect", "Memory\nCorrect")) +
+    labels = c("Memory\nIncorrect", "Memory\nCorrect")
+  ) +
   scale_fill_brewer(palette = "Dark2") +
   scale_x_discrete(expand = c(0, 0)) +
   scale_y_continuous(expand = c(0, 0), limits = c(0, 1)) +

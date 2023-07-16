@@ -1,11 +1,8 @@
 ---
 title: "Improving memory for and production of singular <i>they</i> pronouns: Experiment 2"
 author: "Bethany Gardner"
-date: "03/24/2022, 04/03/2023"
+date: "04/13/2023"
 output: 
-  pdf_document:
-    toc: true
-    toc_depth: 3
   github_document:
     toc: true
     toc_depth: 3
@@ -30,7 +27,7 @@ options(dplyr.summarise.inform = FALSE)
 
 # Load data
 
-Read data, preprocessed from PCIbex output. See data/exp2_data_readme for more details.
+Read data, preprocessed from PCIbex output. See `data/exp2_data_readme` for more details.
 
 ```{r}
 #| label: exp2-load
@@ -153,7 +150,6 @@ exp2_m_memory <- buildmer(
   data = exp2_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp2_m_memory)
 ```
 
@@ -189,7 +185,6 @@ exp2_m_prod <- buildmer(
   data = exp2_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp2_m_prod)
 ```
 
@@ -208,10 +203,9 @@ contrasts(exp2_d$Biographies_HS0) <- cbind("_T1" = c(0, 1))
 contrasts(exp2_d$Biographies_HS0)
 
 exp2_m_prod_bio_HS0 <- glmer(
-  P_Acc ~ Pronoun * PSA * Biographies_HS0 + (1 | Name),
+  formula = P_Acc ~ Pronoun * PSA * Biographies_HS0 + (1 | Name),
   data = exp2_d, family = binomial
 )
-
 summary(exp2_m_prod_bio_HS0)
 ```
 
@@ -226,10 +220,9 @@ contrasts(exp2_d$Biographies_T0) <- cbind("_HS1" = c(1, 0))
 contrasts(exp2_d$Biographies_T0)
 
 exp2_m_prod_bio_T0 <- glmer(
-  P_Acc ~ Pronoun * PSA * Biographies_T0 + (1 | Name),
+  formula = P_Acc ~ Pronoun * PSA * Biographies_T0 + (1 | Name),
   data = exp2_d, family = binomial
 )
-
 summary(exp2_m_prod_bio_T0)
 ```
 
@@ -238,10 +231,11 @@ The three models to compare:
 ```{r}
 #| label: exp2-production-interaction-results
 
-exp2_r_prod_interaction <- bind_rows(.id = "model",
-  "Across_Bio" = exp2_m_prod@model   %>% tidy(),
-  "HeShe_Bio"  = exp2_m_prod_bio_HS0 %>% tidy(),
-  "They_Bio"   = exp2_m_prod_bio_T0  %>% tidy()
+exp2_r_prod_interaction <- bind_rows(
+    .id = "model",
+    "Across_Bio" = exp2_m_prod@model   %>% tidy(),
+    "HeShe_Bio"  = exp2_m_prod_bio_HS0 %>% tidy(),
+    "They_Bio"   = exp2_m_prod_bio_T0  %>% tidy()
   ) %>%
   select(model, term, estimate, p.value) %>%
   filter(
@@ -298,7 +292,6 @@ exp2_m_prod_useThey <- glm(
   formula = P_UseThey ~ PSA * Biographies,
   data = exp2_d_they, family = binomial
 )
-
 summary(exp2_m_prod_useThey)
 ```
 
@@ -368,7 +361,6 @@ exp2_m_mp <- buildmer(
   data = exp2_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp2_m_mp)
 ```
 
@@ -420,7 +412,6 @@ exp2_m_pet <- buildmer(
   data = exp2_d_pronounsPets, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp2_m_pet)
 ```
 
@@ -440,7 +431,6 @@ exp2_m_pet_they <- glmer( # same as buildmer results, just swap CharPronoun
     (1 + M_Type | Name) + (1 | Participant),
   data = exp2_d_pronounsPets, family = binomial
 )
-
 summary(exp2_m_pet_they)
 ```
 
@@ -460,7 +450,6 @@ exp2_m_pet_heshe0 <- glmer( # same as buildmer results, just swap CharPronoun
     (1 + M_Type | Name) + (1 | Participant),
   data = exp2_d_pronounsPets, family = binomial
 )
-
 summary(exp2_m_pet_heshe0)
 ```
 

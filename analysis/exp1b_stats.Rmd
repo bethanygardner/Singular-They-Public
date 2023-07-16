@@ -1,11 +1,8 @@
 ---
 title: "Improving memory for and production of singular <i>they</i> pronouns: Experiment 1B"
 author: "Bethany Gardner"
-date: "03/24/2022, 04/08/2023"
+date: "04/13/2023"
 output: 
-  pdf_document:
-    toc: true
-    toc_depth: 3
   github_document:
     toc: true
     toc_depth: 3
@@ -32,7 +29,7 @@ This is a replication of the first experiment. Everything is identical, except t
 
 # Load Data
 
-Read data, preprocessed from Qualtrics output. See data/exp1b_data_readme for more details.
+Read data, preprocessed from Qualtrics output. See `data/exp1b_data_readme` for more details.
 
 ```{r}
 #| label: exp1b-load
@@ -131,7 +128,6 @@ exp1b_m_memory <- buildmer(
   data = exp1b_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp1b_m_memory)
 ```
 
@@ -214,7 +210,6 @@ exp1b_m_prod <- buildmer(
   data = exp1b_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp1b_m_prod)
 ```
 
@@ -270,8 +265,7 @@ exp1b_d %<>% mutate(
     M_Acc == 0 & P_Acc == 0 ~ "Both wrong",
     M_Acc == 1 & P_Acc == 0 ~ "Memory only",
     M_Acc == 0 & P_Acc == 1 ~ "Production only"
-  )
-)
+))
 
 exp1b_d %>%
   group_by(Pronoun, Combined_Accuracy) %>%
@@ -313,7 +307,6 @@ exp1b_m_mp_buildmer <- buildmer(
   data = exp1b_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp1b_m_mp_buildmer)
 ```
 
@@ -414,8 +407,7 @@ exp1b_d_pronounsPets <- exp1b_d_all %>%
   rename("CharPronoun" = "Pronoun")
 
 exp1b_d_pronounsPets$M_Type %<>% droplevels()
-contrasts(exp1b_d_pronounsPets$M_Type) <- cbind(
-  "petQ vs pronounQ" = c(-.5, .5))
+contrasts(exp1b_d_pronounsPets$M_Type) <- cbind("petQ vs pronounQ" = c(-.5, .5))
 contrasts(exp1b_d_pronounsPets$M_Type)
 ```
 
@@ -425,11 +417,10 @@ contrasts(exp1b_d_pronounsPets$M_Type)
 
 exp1b_m_pet <- buildmer(
   formula = M_Acc ~ CharPronoun * M_Type +
-            (M_Type * CharPronoun | SubjID) +
-            (M_Type * CharPronoun | Name),
+    (M_Type * CharPronoun | SubjID) + (M_Type * CharPronoun | Name),
   data = exp1b_d_pronounsPets, family = binomial,
-  buildmerControl(direction = "order"))
-
+  buildmerControl(direction = "order")
+)
 summary(exp1b_m_pet)
 ```
 
@@ -444,13 +435,13 @@ To check this interaction direction, dummy coded Pronoun with they/them characte
 #| cache: true
 
 exp1b_d_pronounsPets %<>% mutate(CharPronoun_They0 = ifelse(
-  CharPronoun == "they/them", 0, 1))
+  CharPronoun == "they/them", 0, 1
+))
 
 exp1b_m_pet_they <- glmer(
   formula = M_Acc ~ CharPronoun_They0 * M_Type + (M_Type | SubjID),
-  data = exp1b_d_pronounsPets, family = binomial,
+  data = exp1b_d_pronounsPets, family = binomial
 )
-
 summary(exp1b_m_pet_they)
 ```
 
@@ -463,13 +454,13 @@ Now dummy code to get main effect of Question Type in he/him + she/her (= 0)
 #| cache: true
 
 exp1b_d_pronounsPets %<>% mutate(CharPronoun_HeShe0 = ifelse(
-  CharPronoun == "they/them", 1, 0))
+  CharPronoun == "they/them", 1, 0
+))
 
 exp1b_m_pet_heshe <- glmer(
   formula = M_Acc ~ CharPronoun_HeShe0 * M_Type + (M_Type | SubjID),
-  data = exp1b_d_pronounsPets, family = binomial,
+  data = exp1b_d_pronounsPets, family = binomial
 )
-
 summary(exp1b_m_pet_heshe)
 ```
 
@@ -502,11 +493,7 @@ str(exp1a_d)
 ```{r}
 #| label: exp1-join-data
 
-exp1_d <- bind_rows(
-  .id = "Experiment",
-  "Exp1A" = exp1a_d,
-  "Exp1B" = exp1b_d
-)
+exp1_d <- bind_rows(.id = "Experiment", "Exp1A" = exp1a_d, "Exp1B" = exp1b_d)
 
 # add contrast coding back to Pronoun
 contrasts(exp1_d$Pronoun) <- cbind(
@@ -552,7 +539,6 @@ exp1_m_memory <- buildmer(
   data = exp1_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp1_m_memory)
 ```
 
@@ -583,7 +569,6 @@ exp1_m_prod <- buildmer(
   data = exp1_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp1_m_prod)
 ```
 
@@ -650,7 +635,6 @@ exp1_m_diff <- lm(
   formula = Diff ~ Experiment * Pronoun,
   data = exp1_d_diff
 )
-
 summary(exp1_m_diff)
 ```
 
@@ -664,9 +648,10 @@ Compare job and pet means too:
 ```{r}
 #| label: exp1-pet-means
 
-exp1_d_pets <- bind_rows(.id     = "Exp",
-  "Exp1A" = exp1a_d_all,
-  "Exp1B" = exp1b_d_all
+exp1_d_pets <- bind_rows(
+    .id = "Exp",
+    "Exp1A" = exp1a_d_all,
+    "Exp1B" = exp1b_d_all
   ) %>%
   filter(M_Type == "pet") %>%
   select(Exp, SubjID, Pronoun, M_Acc)
@@ -684,9 +669,10 @@ exp1_d_pets %>%
 ```{r}
 #| label: exp1-job-means
 
-exp1_d_jobs <- bind_rows(.id = "Exp",
-  "Exp1A" = exp1a_d_all,
-  "Exp1B" = exp1b_d_all
+exp1_d_jobs <- bind_rows(
+    .id = "Exp",
+    "Exp1A" = exp1a_d_all,
+    "Exp1B" = exp1b_d_all
   ) %>%
   filter(M_Type == "job") %>%
   select(Exp, SubjID, Pronoun, M_Acc)

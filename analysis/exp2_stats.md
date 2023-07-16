@@ -2,34 +2,27 @@ Improving memory for and production of singular <i>they</i> pronouns:
 Experiment 2
 ================
 Bethany Gardner
-03/24/2022, 04/03/2023
+04/13/2023
 
-- <a href="#load-data" id="toc-load-data">Load data</a>
-- <a href="#memory" id="toc-memory">Memory</a>
-  - <a href="#descriptive-stats" id="toc-descriptive-stats">Descriptive
-    Stats</a>
-  - <a href="#model" id="toc-model">Model</a>
-- <a href="#production" id="toc-production">Production</a>
-  - <a href="#descriptive-stats-1" id="toc-descriptive-stats-1">Descriptive
-    Stats</a>
-  - <a href="#model-1" id="toc-model-1">Model</a>
-  - <a href="#three-way-interaction"
-    id="toc-three-way-interaction">Three-Way Interaction</a>
-  - <a href="#producing-theythem-at-least-once"
-    id="toc-producing-theythem-at-least-once">Producing they/them at least
-    once</a>
-- <a href="#memory-predicting-production"
-  id="toc-memory-predicting-production">Memory Predicting Production</a>
-  - <a href="#descriptive-stats-2" id="toc-descriptive-stats-2">Descriptive
-    Stats</a>
-  - <a href="#model-2" id="toc-model-2">Model</a>
-- <a href="#compare-pet-questions" id="toc-compare-pet-questions">Compare
-  Pet Questions</a>
-- <a href="#compare-to-exp1" id="toc-compare-to-exp1">Compare to Exp1</a>
+- [Load data](#load-data)
+- [Memory](#memory)
+  - [Descriptive Stats](#descriptive-stats)
+  - [Model](#model)
+- [Production](#production)
+  - [Descriptive Stats](#descriptive-stats-1)
+  - [Model](#model-1)
+  - [Three-Way Interaction](#three-way-interaction)
+  - [Producing they/them at least
+    once](#producing-theythem-at-least-once)
+- [Memory Predicting Production](#memory-predicting-production)
+  - [Descriptive Stats](#descriptive-stats-2)
+  - [Model](#model-2)
+- [Compare Pet Questions](#compare-pet-questions)
+- [Compare to Exp1](#compare-to-exp1)
 
 # Load data
 
-Read data, preprocessed from PCIbex output. See data/exp2_data_readme
+Read data, preprocessed from PCIbex output. See `data/exp2_data_readme`
 for more details.
 
 ``` r
@@ -696,10 +689,9 @@ contrasts(exp2_d$Biographies_HS0)
 
 ``` r
 exp2_m_prod_bio_HS0 <- glmer(
-  P_Acc ~ Pronoun * PSA * Biographies_HS0 + (1 | Name),
+  formula = P_Acc ~ Pronoun * PSA * Biographies_HS0 + (1 | Name),
   data = exp2_d, family = binomial
 )
-
 summary(exp2_m_prod_bio_HS0)
 ```
 
@@ -793,10 +785,9 @@ contrasts(exp2_d$Biographies_T0)
 
 ``` r
 exp2_m_prod_bio_T0 <- glmer(
-  P_Acc ~ Pronoun * PSA * Biographies_T0 + (1 | Name),
+  formula = P_Acc ~ Pronoun * PSA * Biographies_T0 + (1 | Name),
   data = exp2_d, family = binomial
 )
-
 summary(exp2_m_prod_bio_T0)
 ```
 
@@ -877,10 +868,11 @@ summary(exp2_m_prod_bio_T0)
 The three models to compare:
 
 ``` r
-exp2_r_prod_interaction <- bind_rows(.id = "model",
-  "Across_Bio" = exp2_m_prod@model   %>% tidy(),
-  "HeShe_Bio"  = exp2_m_prod_bio_HS0 %>% tidy(),
-  "They_Bio"   = exp2_m_prod_bio_T0  %>% tidy()
+exp2_r_prod_interaction <- bind_rows(
+    .id = "model",
+    "Across_Bio" = exp2_m_prod@model   %>% tidy(),
+    "HeShe_Bio"  = exp2_m_prod_bio_HS0 %>% tidy(),
+    "They_Bio"   = exp2_m_prod_bio_T0  %>% tidy()
   ) %>%
   select(model, term, estimate, p.value) %>%
   filter(
@@ -961,7 +953,6 @@ exp2_m_prod_useThey <- glm(
   formula = P_UseThey ~ PSA * Biographies,
   data = exp2_d_they, family = binomial
 )
-
 summary(exp2_m_prod_useThey)
 ```
 
@@ -969,10 +960,6 @@ summary(exp2_m_prod_useThey)
     ## Call:
     ## glm(formula = P_UseThey ~ PSA * Biographies, family = binomial, 
     ##     data = exp2_d_they)
-    ## 
-    ## Deviance Residuals: 
-    ##     Min       1Q   Median       3Q      Max  
-    ## -1.3082  -0.9282  -0.7804   1.2202   1.6356  
     ## 
     ## Coefficients:
     ##                               Estimate Std. Error z value Pr(>|z|)    
@@ -1009,13 +996,13 @@ exp2_d %>%
     ##  2 he/him  Unrelated HeShe           1 0.927
     ##  3 he/him  Unrelated They            0 0.812
     ##  4 he/him  Unrelated They            1 0.892
-    ##  5 he/him  PSA       HeShe           0 0.781
-    ##  6 he/him  PSA       HeShe           1 0.816
-    ##  7 he/him  PSA       They            0 0.738
-    ##  8 he/him  PSA       They            1 0.867
+    ##  5 he/him  Gender    HeShe           0 0.781
+    ##  6 he/him  Gender    HeShe           1 0.816
+    ##  7 he/him  Gender    They            0 0.738
+    ##  8 he/him  Gender    They            1 0.867
     ##  9 she/her Unrelated HeShe           0 0.839
     ## 10 she/her Unrelated HeShe           1 0.894
-    ## # … with 14 more rows
+    ## # ℹ 14 more rows
 
 Combining the two measures, there are 4 possible patterns: getting both
 right, getting both wrong, getting just memory right, and getting just
@@ -1049,9 +1036,9 @@ exp2_r_dist
     ##  6 he/him  Unrelated They        Both wrong           13
     ##  7 he/him  Unrelated They        Memory only          27
     ##  8 he/him  Unrelated They        Production only      56
-    ##  9 he/him  PSA       HeShe       Both right          209
-    ## 10 he/him  PSA       HeShe       Both wrong           14
-    ## # … with 38 more rows
+    ##  9 he/him  Gender    HeShe       Both right          209
+    ## 10 he/him  Gender    HeShe       Both wrong           14
+    ## # ℹ 38 more rows
 
 Production accuracy for they/them when memory was correct vs incorrect.
 

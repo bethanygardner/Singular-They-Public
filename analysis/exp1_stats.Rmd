@@ -1,11 +1,8 @@
 ---
 title: "Improving memory for and production of singular <i>they</i> pronouns: Experiment 1"
 author: "Bethany Gardner"
-date: "03/24/2022, 04/08/2023"
+date: "04/13/2023"
 output: 
-  pdf_document:
-    toc: true
-    toc_depth: 3
   github_document:
     toc: true
     toc_depth: 3
@@ -30,7 +27,7 @@ options(dplyr.summarise.inform = FALSE)
 
 # Load Data
 
-Read data, preprocessed from Qualtrics output. See data/exp1a_data_readme for more details.
+Read data, preprocessed from Qualtrics output. See `data/exp1a_data_readme` for more details.
 
 ```{r}
 #| label: exp1-load
@@ -46,7 +43,8 @@ Set up contrast coding. The first contrast compares they to he+she. The second c
 
 contrasts(exp1a_d_all$Pronoun) <- cbind(
   "they vs he+she" = c(.33, .33, -.66),
-  "he vs she"      = c(-.5, .5, 0))
+  "he vs she"      = c(-.5, .5, 0)
+)
 contrasts(exp1a_d_all$Pronoun)
 ```
 
@@ -125,7 +123,6 @@ exp1a_m_memory <- buildmer(
   data = exp1a_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp1a_m_memory)
 ```
 
@@ -179,6 +176,7 @@ table(exp1a_d$Pronoun, exp1a_d$P_Pronoun)
 (exp1a_d %>% filter(P_Pronoun == "none") %>% pull(P_Pronoun) %>% length()) /
 (exp1a_d %>% pull(P_Pronoun) %>% length())
 ```
+
 ```{r}
 #| label: exp1-production-pronoun-errors
 
@@ -214,7 +212,6 @@ exp1a_m_prod <- buildmer(
   data = exp1a_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp1a_m_prod)
 ```
 
@@ -310,7 +307,6 @@ exp1a_m_mp <- buildmer(
   data = exp1a_d, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp1a_m_mp)
 ```
 
@@ -360,9 +356,7 @@ exp1a_d_task <- exp1a_d_all %>%  # memory + prod in long format
 
 # Mean-center effects code Task
 exp1a_d_task$Task %<>% factor()
-contrasts(exp1a_d_task$Task) <- cbind(
-  "mem vs prod" = c(-.5, +.5)
-)
+contrasts(exp1a_d_task$Task) <- cbind("mem vs prod" = c(-.5, +.5))
 contrasts(exp1a_d_task$Task)
 ```
 
@@ -371,13 +365,10 @@ contrasts(exp1a_d_task$Task)
 #| cache: true
 
 exp1a_m_task_all <- buildmer(
-  formula = Acc ~ Pronoun * Task +
-    (Pronoun | SubjID) + (Pronoun | Name),
-  data = exp1a_d_task,
-  family = binomial,
+  formula = Acc ~ Pronoun * Task + (Pronoun | SubjID) + (Pronoun | Name),
+  data = exp1a_d_task, family = binomial,
   buildmerControl(direction = "order")
 )
-
 summary(exp1a_m_task_all)
 ```
 
@@ -392,13 +383,10 @@ First, the Task effect just for they/them characters:
 #| label: exp1-task-model-they
 #| cache: true
 
-exp1a_m_task_they0 <- glmer(
-  formula = Acc ~ Pronoun_They0 * Task +
-    (1 | SubjID) + (1 | Name),  # use random effects from main
-  data = exp1a_d_task,
-  family = binomial,
+exp1a_m_task_they0 <- glmer(  # use random effects from main
+  formula = Acc ~ Pronoun_They0 * Task + (1 | SubjID) + (1 | Name),
+  data = exp1a_d_task, family = binomial
 )
-
 summary(exp1a_m_task_they0)
 ```
 
@@ -410,13 +398,10 @@ Second, the Task effect just for he/him and she/her characters:
 #| label: exp1-task-model-heshe
 #| cache: true
 
-exp1a_m_task_heshe0 <- glmer(
-  formula = Acc ~ Pronoun_HeShe0 * Task +
-    (1 | SubjID) + (1 | Name),  # use random effects from main
-  data = exp1a_d_task,
-  family = binomial
+exp1a_m_task_heshe0 <- glmer(  # use random effects from main
+  formula = Acc ~ Pronoun_HeShe0 * Task + (1 | SubjID) + (1 | Name),
+  data = exp1a_d_task, family = binomial
 )
-
 summary(exp1a_m_task_heshe0)
 ```
 
@@ -452,12 +437,10 @@ contrasts(exp1a_d_pronounsPets$M_Type)
 
 exp1a_m_pet <- buildmer(
   formula = M_Acc ~ CharPronoun * M_Type +
-    (M_Type * CharPronoun | SubjID) +
-    (M_Type * CharPronoun | Name),
+    (M_Type * CharPronoun | SubjID) + (M_Type * CharPronoun | Name),
   data = exp1a_d_pronounsPets, family = binomial,
   buildmerControl(direction = "order")
-  )
-
+)
 summary(exp1a_m_pet)
 ```
 
@@ -471,15 +454,13 @@ To check this interaction direction, dummy coded Pronoun with they/them characte
 #| cache: true
 
 exp1a_d_pronounsPets %<>% mutate(CharPronoun_They0 = ifelse(
-  CharPronoun == "they/them", 0, 1))
+  CharPronoun == "they/them", 0, 1
+))
 
-exp1a_m_pet_they <- glmer(
-  formula = M_Acc ~ CharPronoun_They0 * M_Type +
-    (M_Type | SubjID),  # use random effects from main
-  data = exp1a_d_pronounsPets,
-  family = binomial
+exp1a_m_pet_they <- glmer(  # use random effects from main
+  formula = M_Acc ~ CharPronoun_They0 * M_Type + (M_Type | SubjID),
+  data = exp1a_d_pronounsPets, family = binomial
 )
-
 summary(exp1a_m_pet_they)
 ```
 
@@ -492,15 +473,13 @@ Now dummy code to get main effect of Question Type in he/him + she/her (= 0)
 #| cache: true
 
 exp1a_d_pronounsPets %<>% mutate(CharPronoun_HeShe0 = ifelse(
-  CharPronoun == "they/them", 1, 0))
+  CharPronoun == "they/them", 1, 0
+))
 
-exp1a_m_pet_heshe <- glmer(
-  formula = M_Acc ~ CharPronoun_HeShe0 * M_Type +
-      (M_Type | SubjID),  # use random effects from main
-  data = exp1a_d_pronounsPets,
-  family = binomial
+exp1a_m_pet_heshe <- glmer(  # use random effects from main
+  formula = M_Acc ~ CharPronoun_HeShe0 * M_Type + (M_Type | SubjID),
+  data = exp1a_d_pronounsPets, family = binomial
 )
-
 summary(exp1a_m_pet_heshe)
 ```
 
